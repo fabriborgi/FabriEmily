@@ -1,6 +1,17 @@
--- Il costo non arriva mai dal client: si legge da item_prices. Il `for update`
--- serializza gli acquisti concorrenti, ed è ciò che rende impossibile scendere
--- sotto zero se entrambi comprano nello stesso istante.
+-- Il costo non arriva mai dal client: si legge da item_prices, altrimenti il
+-- browser potrebbe comprare a costo zero.
+--
+-- Il `for update` serializza gli acquisti concorrenti. Attenzione a cosa fa
+-- davvero: NON e' lui a impedire il saldo negativo, quello lo impedisce gia'
+-- il vincolo check (coins >= 0) sulla tabella, che e' sincrono e non lascia
+-- committare una riga negativa in nessun caso. Il lock serve a far leggere il
+-- saldo aggiornato invece di uno stantio, cosi' che due acquisti simultanei
+-- producano un `insufficient_funds` pulito - saldo intatto, nessuna riga di
+-- ledger - invece di una violazione di vincolo generica che il chiamante non
+-- saprebbe tradurre in un messaggio sensato.
+-- Verificato in review con due sessioni concorrenti: senza il lock entrambe
+-- superano il controllo applicativo e a fallire e' il check; con il lock la
+-- seconda rilegge il saldo fresco e solleva insufficient_funds.
 create or replace function spend_coins(p_actor person, p_item_key text)
 returns int
 language plpgsql
