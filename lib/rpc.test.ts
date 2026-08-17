@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { toUserMessage, call } from './rpc';
 
 describe('toUserMessage', () => {
@@ -93,6 +93,41 @@ describe('toUserMessage', () => {
     expect(
       toUserMessage({ message: 'SSL connection has been closed unexpectedly' }),
     ).toBe('Something went wrong. Please try again.');
+  });
+});
+
+describe('precedenza fra codice applicativo e segnali di rete', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('un codice noto vince su navigator.onLine falso', async () => {
+    // navigator.onLine ha falsi negativi transitori (WiFi -> cellulare). Un errore
+    // che porta un codice applicativo dimostra che il server ha risposto, quindi
+    // il codice deve prevalere: dire "sei offline" manderebbe la persona a
+    // riprovare invece che a guadagnare monete.
+    vi.stubGlobal('navigator', { onLine: false });
+    const result = await call(
+      Promise.resolve({ data: null, error: { message: 'insufficient_funds' } }),
+    );
+    expect(result.error).toBe("You don't have enough coins for that yet.");
+  });
+
+  it('senza codice noto, navigator.onLine falso produce il messaggio di rete', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    const result = await call(
+      Promise.resolve({ data: null, error: { message: 'qualcosa di ignoto' } }),
+    );
+    expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('riconosce i messaggi di WebKit precedenti a Safari 15.4', () => {
+    expect(toUserMessage({ message: 'The Internet connection appears to be offline.' })).toBe(
+      'No connection. Your work is still here — try again.',
+    );
+    expect(toUserMessage({ message: 'The network connection was lost.' })).toBe(
+      'No connection. Your work is still here — try again.',
+    );
   });
 });
 

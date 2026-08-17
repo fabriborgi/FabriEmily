@@ -29,6 +29,10 @@ const NETWORK_SIGNATURES = [
   'load failed', // WebKit: ogni browser su iPhone dice questo, non "fetch"/"network"
   'network request failed',
   'err_internet_disconnected',
+  // WebKit prima di Safari 15.4: iPhone non aggiornati, popolazione residua
+  // ma esattamente il tipo di device che resta in giro per anni.
+  'the internet connection appears to be offline',
+  'network connection was lost',
 ];
 
 /**
@@ -82,9 +86,17 @@ export function toUserMessage(error: unknown): string | null {
   // Un message assente o non stringa (numero, null, ...) non è un codice noto:
   // ricade nel messaggio generico invece di far esplodere la .includes() sotto.
   if (typeof message !== 'string') return GENERIC;
-  if (isNetworkFailureMessage(message) || isDeclaredOffline()) return OFFLINE;
+  // I codici noti vengono PRIMA dei segnali di rete, e l'ordine e' sostanziale.
+  // Un errore che porta un codice applicativo e' la prova che la richiesta ha
+  // fatto andata e ritorno: il server ha risposto. navigator.onLine, letto in
+  // quell'istante, puo' dire false per un falso negativo transitorio (il
+  // passaggio da WiFi a rete cellulare e' il caso tipico) e coprirebbe
+  // "non hai abbastanza monete" con "sei offline, riprova" - un messaggio che
+  // manda la persona a fare la cosa sbagliata.
   const found = MESSAGES.find(([code]) => message.includes(code));
-  return found ? found[1] : GENERIC;
+  if (found) return found[1];
+  if (isNetworkFailureMessage(message) || isDeclaredOffline()) return OFFLINE;
+  return GENERIC;
 }
 
 type SupabaseResult<T> = { data: T | null; error: { message: string } | null };
