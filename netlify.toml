@@ -1,0 +1,28 @@
+# Configurazione di build nel repo, non nel pannello Netlify.
+#
+# Il sito e' stato creato quando il repo conteneva solo il README: Netlify non ha
+# rilevato alcun framework e ha fissato impostazioni "sito statico dalla radice",
+# che restituiscono 404 anche adesso che l'applicazione esiste. Mettere qui la
+# configurazione la rende riproducibile e indipendente da cio' che il pannello
+# ha indovinato al momento della connessione del repo.
+#
+# La publish directory NON va indicata: la gestisce il runtime Next di Netlify,
+# che viene installato automaticamente quando rileva Next.js.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # In locale si sviluppa su Node 26, ma qui si pinna la LTS che Netlify
+  # supporta in modo garantito. Se un giorno il build fallisce per una API
+  # di Node troppo recente, e' questo il numero da alzare.
+  NODE_VERSION = "22"
+
+# L'app richiede tre variabili d'ambiente, da impostare nel pannello Netlify
+# (Project configuration -> Environment variables) e non qui, perche' cambiano
+# fra ambienti e una di esse e' una chiave:
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   NEXT_PUBLIC_COUPLE_EMAIL
+# Senza di esse il build riesce ma l'app si ferma all'avvio con un errore
+# esplicito che nomina la variabile mancante (lib/env.ts).
