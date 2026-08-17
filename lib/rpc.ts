@@ -15,6 +15,54 @@ const MESSAGES: Array<[string, string]> = [
 const GENERIC = 'Something went wrong. Please try again.';
 const OFFLINE = 'No connection. Your work is still here — try again.';
 
+// Firme testuali specifiche dei fallimenti di fetch nei browser che contano per
+// questo progetto (due telefoni, uno in Italia e uno a Buffalo) più l'ambiente
+// Node in cui girano i test. Deliberatamente NON generiche: parole come
+// "connection" o "offline" comparirebbero anche in guasti lato server Postgres
+// reali (es. "remaining connection slots are reserved...", "terminating
+// connection due to administrator command", "SSL connection has been closed
+// unexpectedly") che non hanno nulla a che fare col telefono dell'utente.
+const NETWORK_SIGNATURES = [
+  'failed to fetch', // Chrome e derivati
+  'fetch failed', // quello che produce davvero postgrest-js (vedi sotto)
+  'networkerror', // Firefox
+  'load failed', // WebKit: ogni browser su iPhone dice questo, non "fetch"/"network"
+  'network request failed',
+  'err_internet_disconnected',
+];
+
+/**
+ * Riconosce se un testo di errore è la firma di un fallimento di rete (fetch
+ * caduto), non un guasto qualunque che nomini genericamente "connection".
+ *
+ * Vive qui, condivisa fra i due punti che la usano, perché il comportamento di
+ * postgrest-js è controintuitivo: quando throwOnError non è attivo — e call()
+ * non lo attiva mai — la libreria intercetta i fallimenti di fetch e li
+ * RISOLVE come { data: null, error } invece di farli rigettare. Un client
+ * supabase-js reale puntato su un host irraggiungibile non lancia mai: passa
+ * dal ramo "error" di toUserMessage, non dal catch di call(). Se il
+ * riconoscimento vivesse solo nel catch, sarebbe irraggiungibile per ogni
+ * chiamata .rpc() — esattamente il bug di questo rilievo. Chi tocca questo
+ * codice fra sei mesi, vedendo solo il catch, rifarebbe lo stesso errore:
+ * per questo il controllo sta dentro toUserMessage, dove copre sia l'errore
+ * risolto come valore sia quello (più raro) lanciato come eccezione.
+ */
+function isNetworkFailureMessage(message: string): boolean {
+  const lower = message.toLowerCase();
+  return NETWORK_SIGNATURES.some((signature) => lower.includes(signature));
+}
+
+/**
+ * navigator può non esistere (il modulo è valutabile anche fuori dal browser),
+ * quindi l'accesso va protetto. onLine === false è un segnale diretto e
+ * affidabile in negativo, ma non sostituisce il controllo sul messaggio:
+ * può restituire true anche quando la rete c'è ma non porta da nessuna parte
+ * (per esempio dietro un captive portal), quindi resta solo un segnale in più.
+ */
+function isDeclaredOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
 /**
  * È un confine: qualunque cosa riceva, anche un oggetto malformato costruito
  * a mano altrove, deve restituire una stringa o null, mai lanciare. È esportata
@@ -23,10 +71,18 @@ const OFFLINE = 'No connection. Your work is still here — try again.';
  */
 export function toUserMessage(error: unknown): string | null {
   if (error === null || error === undefined) return null;
-  const message = typeof error === 'object' ? (error as { message?: unknown }).message : undefined;
+  let message: unknown;
+  try {
+    message = typeof error === 'object' ? (error as { message?: unknown }).message : undefined;
+  } catch {
+    // Caso di laboratorio: un getter su "message" che solleva. Nessuna libreria
+    // reale lo fa, ma il contratto è "non lancia mai, qualunque input".
+    return GENERIC;
+  }
   // Un message assente o non stringa (numero, null, ...) non è un codice noto:
   // ricade nel messaggio generico invece di far esplodere la .includes() sotto.
   if (typeof message !== 'string') return GENERIC;
+  if (isNetworkFailureMessage(message) || isDeclaredOffline()) return OFFLINE;
   const found = MESSAGES.find(([code]) => message.includes(code));
   return found ? found[1] : GENERIC;
 }
@@ -43,16 +99,7 @@ export async function call<T>(
     return { data, error: null };
   } catch (thrown) {
     const message = thrown instanceof Error ? thrown.message : '';
-    // Su iOS ogni browser è WebKit, e WebKit non dice "fetch" né "network" quando
-    // la rete cade: dice "Load failed". Senza "load failed" (e "connection") il
-    // messaggio rassicurante di OFFLINE non comparirebbe mai su telefono.
-    const networkKeyword = /fetch|network|offline|load failed|connection/i.test(message);
-    // navigator può non esistere (il modulo è valutabile anche fuori dal browser),
-    // quindi l'accesso va protetto. onLine === false è un segnale diretto e
-    // affidabile in negativo, ma non sostituisce il controllo sul messaggio:
-    // può restituire true anche quando la rete c'è ma non porta da nessuna parte
-    // (per esempio dietro un captive portal), quindi resta solo un segnale in più.
-    const declaredOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
-    return { data: null, error: networkKeyword || declaredOffline ? OFFLINE : GENERIC };
+    const isOffline = isNetworkFailureMessage(message) || isDeclaredOffline();
+    return { data: null, error: isOffline ? OFFLINE : GENERIC };
   }
 }

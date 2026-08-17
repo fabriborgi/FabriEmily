@@ -47,6 +47,53 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ message: null })).toBe('Something went wrong. Please try again.');
     expect(toUserMessage({ message: 42 })).toBe('Something went wrong. Please try again.');
   });
+
+  it('non lancia mai nemmeno se message è un getter che solleva un’eccezione', () => {
+    const evil = {
+      get message(): string {
+        throw new Error('boom');
+      },
+    };
+    expect(toUserMessage(evil)).toBe('Something went wrong. Please try again.');
+  });
+
+  it('riconosce "TypeError: fetch failed", il messaggio che postgrest-js risolve (non rigetta) su host irraggiungibile', () => {
+    expect(toUserMessage({ message: 'TypeError: fetch failed' })).toBe(
+      'No connection. Your work is still here — try again.',
+    );
+  });
+
+  it('riconosce "Load failed" anche quando arriva come valore risolto, non come eccezione', () => {
+    expect(toUserMessage({ message: 'Load failed' })).toBe(
+      'No connection. Your work is still here — try again.',
+    );
+  });
+
+  it('riconosce "Failed to fetch" anche quando arriva come valore risolto', () => {
+    expect(toUserMessage({ message: 'Failed to fetch' })).toBe(
+      'No connection. Your work is still here — try again.',
+    );
+  });
+
+  it('non tratta come rete un errore Postgres che parla di "connection slots" lato server', () => {
+    expect(
+      toUserMessage({
+        message: 'FATAL: remaining connection slots are reserved for non-replication superuser connections',
+      }),
+    ).toBe('Something went wrong. Please try again.');
+  });
+
+  it('non tratta come rete un errore Postgres che termina la connessione su comando amministrativo', () => {
+    expect(
+      toUserMessage({ message: 'terminating connection due to administrator command' }),
+    ).toBe('Something went wrong. Please try again.');
+  });
+
+  it('non tratta come rete un errore Postgres su una connessione SSL chiusa lato server', () => {
+    expect(
+      toUserMessage({ message: 'SSL connection has been closed unexpectedly' }),
+    ).toBe('Something went wrong. Please try again.');
+  });
 });
 
 describe('call', () => {
@@ -81,5 +128,41 @@ describe('call', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  // Questi test riproducono il percorso REALE: postgrest-js, quando throwOnError
+  // non è attivo (e call() non lo attiva mai), intercetta i fallimenti di fetch
+  // e li RISOLVE come { data: null, error: {...} } invece di farli rigettare.
+  // Un client supabase-js reale puntato su un host irraggiungibile produce esattamente
+  // questa forma: { data: null, error: { message: "TypeError: fetch failed" } }.
+  // Se questi test passassero solo con Promise.reject(), il fix sarebbe sintetico
+  // e non coprirebbe il caso vero.
+  it('riconosce come assenza di connessione un errore RISOLTO nella forma prodotta davvero da postgrest-js', async () => {
+    const result = await call(
+      Promise.resolve({ data: null, error: { message: 'TypeError: fetch failed' } }),
+    );
+    expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('riconosce "Load failed" anche quando arriva come errore RISOLTO (non un reject)', async () => {
+    const result = await call(Promise.resolve({ data: null, error: { message: 'Load failed' } }));
+    expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('riconosce "Failed to fetch" anche quando arriva come errore RISOLTO (non un reject)', async () => {
+    const result = await call(
+      Promise.resolve({ data: null, error: { message: 'Failed to fetch' } }),
+    );
+    expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('non scambia per rete un guasto Postgres reale che nomina "connection" lato server', async () => {
+    const result = await call(
+      Promise.resolve({
+        data: null,
+        error: { message: 'terminating connection due to administrator command' },
+      }),
+    );
+    expect(result.error).toBe('Something went wrong. Please try again.');
   });
 });
