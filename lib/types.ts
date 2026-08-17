@@ -159,6 +159,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assert_valid_strokes: { Args: { p_strokes: Json }; Returns: undefined }
       create_letter: {
         Args: {
           p_author: Database["public"]["Enums"]["person"]
