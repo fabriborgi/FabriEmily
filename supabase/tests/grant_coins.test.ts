@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { sql, resetData } from './helpers';
+import { sql, signedInClient, resetData } from './helpers';
 
 const coins = async () =>
   (await sql<{ coins: number }>('select coins from couple_state where id = 1'))[0].coins;
@@ -89,6 +89,37 @@ describe('grant_coins', () => {
   it('conta solo lo stesso motivo, non tutti i movimenti della persona', async () => {
     for (let i = 0; i < 3; i++) await grant('emily', 'letter_written', 100);
     expect(await grant('emily', 'drawing_sent', 10)).toBe(65);
+  });
+
+  it('sotto concorrenza reale, con una sola concessione al cap, ne passa esattamente una', async () => {
+    // 'daily_open' ha daily_cap = 1: a giornata appena resettata (nessuna riga
+    // di ledger) manca esattamente una concessione al cap. Le due connessioni
+    // si autenticano IN SEQUENZA (due login concorrenti sullo stesso account
+    // sono un'altra fonte di intermittenza, indipendente dal bug che vogliamo
+    // dimostrare) e solo dopo lanciano le due RPC insieme, come due schede
+    // dello stesso browser dopo un doppio tocco sul pulsante. Senza il lock
+    // su couple_state, sotto READ COMMITTED entrambe leggerebbero v_used = 0
+    // e il cap verrebbe superato: due righe in ledger invece di una.
+    const clientA = await signedInClient();
+    const clientB = await signedInClient();
+    // "Scalda" entrambe le connessioni HTTP con una select innocua prima della
+    // corsa: senza questo, il round-trip TCP/TLS della prima richiesta su una
+    // connessione la sfalsa rispetto all'altra e la finestra di corsa si perde.
+    await Promise.all([
+      clientA.from('coin_rules').select('reason').limit(1),
+      clientB.from('coin_rules').select('reason').limit(1),
+    ]);
+    const [a, b] = await Promise.all([
+      clientA.rpc('grant_coins', { p_actor: 'emily', p_reason: 'daily_open' }),
+      clientB.rpc('grant_coins', { p_actor: 'emily', p_reason: 'daily_open' }),
+    ]);
+    expect(a.error).toBeNull();
+    expect(b.error).toBeNull();
+
+    const rows = await sql<{ n: string }>(
+      `select count(*) as n from coin_ledger where actor = 'emily' and reason = 'daily_open'`,
+    );
+    expect(Number(rows[0].n)).toBe(1); // pari al cap, non cap + 1
   });
 
   it('è eseguibile da authenticated ma non da anon', async () => {

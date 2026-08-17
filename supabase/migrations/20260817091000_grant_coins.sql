@@ -15,6 +15,15 @@ declare
   v_used  int;
   v_coins int;
 begin
+  -- Lock su couple_state PRIMA di leggere il ledger: serializza le concessioni
+  -- concorrenti con lo stesso actor/reason, così due chiamate vicine al cap
+  -- (es. doppio tocco sul pulsante) non possono più leggere entrambe
+  -- v_used < daily_cap prima che l'una o l'altra abbia inserito la propria
+  -- riga. Stesso meccanismo di spend_coins: ogni concessione aggiorna comunque
+  -- questa riga, quindi il lock non introduce contesa nuova, sposta solo il
+  -- momento in cui viene preso.
+  select coins into v_coins from couple_state where id = 1 for update;
+
   select * into v_rule from coin_rules where reason = p_reason;
   if not found then
     raise exception 'unknown_coin_reason';
@@ -22,7 +31,6 @@ begin
 
   -- Sotto il minimo non è un errore: il contenuto è valido, semplicemente non paga.
   if p_units < v_rule.min_units then
-    select coins into v_coins from couple_state where id = 1;
     return v_coins;
   end if;
 
@@ -38,7 +46,6 @@ begin
                           at time zone 'America/New_York';
 
     if v_used >= v_rule.daily_cap then
-      select coins into v_coins from couple_state where id = 1;
       return v_coins;
     end if;
   end if;

@@ -159,7 +159,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      grant_coins: {
+        Args: {
+          p_actor: Database["public"]["Enums"]["person"]
+          p_reason: string
+          p_ref?: string
+          p_units?: number
+        }
+        Returns: number
+      }
     }
     Enums: {
       letter_kind: "text" | "drawing"
