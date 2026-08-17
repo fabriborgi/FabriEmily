@@ -114,8 +114,9 @@ la parte più densa di logica e deve essere testabile in isolamento.
 create type person      as enum ('fabrizio','emily');
 create type letter_kind as enum ('text','drawing');
 
--- I confini di giornata dei cap giornalieri usano il letterale 'Europe/Rome',
--- che compare in un solo punto del codice: grant_coins. Cambiare fuso = cambiare lì.
+-- I cap giornalieri si resettano a mezzanotte di Buffalo, dove vive Emily, che sono
+-- le 6 del mattino in Italia. Il fuso è il letterale 'America/New_York' e compare in un
+-- solo punto del codice: grant_coins. Cambiare fuso = cambiare lì.
 
 create table couple_state (
   id         int primary key default 1 check (id = 1),
@@ -197,10 +198,18 @@ Ritorna il nuovo saldo.
    e riporta a `timestamptz`:
 
    ```sql
-   created_at >= date_trunc('day', now() at time zone 'Europe/Rome') at time zone 'Europe/Rome'
+   created_at >= date_trunc('day', now() at time zone 'America/New_York')
+                   at time zone 'America/New_York'
    ```
 
    Se il conteggio ha già raggiunto il cap, non accredita e ritorna il saldo attuale.
+
+   Il fuso è quello di Buffalo, dove vive Emily: la giornata cambia a mezzanotte per lei e
+   alle 6 del mattino per Fabrizio. Usare il nome della zona e non un offset fisso è ciò che
+   mantiene il confine corretto attraverso i cambi di ora legale. Per le circa tre settimane
+   all'anno in cui Stati Uniti ed Europa cambiano l'ora in date diverse, il confine resta
+   mezzanotte a Buffalo ma diventa le 5 o le 7 del mattino in Italia: irrilevante per un cap
+   sulle monete, ma vale saperlo invece di scoprirlo come un bug.
 4. Altrimenti inserisce la riga di ledger, incrementa `couple_state.coins`, ritorna il nuovo saldo.
 
 ### `create_letter(p_author person, p_kind letter_kind, p_body text, p_strokes jsonb) → letters`
