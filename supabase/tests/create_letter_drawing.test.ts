@@ -74,6 +74,12 @@ describe('create_letter — disegni', () => {
     ['campo p mancante', [{ c: 0, w: 0 }]],
     ['tratto non oggetto', ['ciao']],
     ['non è un array', { c: 0 }],
+    // Regressione: c/w e le coordinate sono indici/interi, non devono accettare frazionari.
+    ['colore frazionario', [{ c: 0.5, w: 0, p: [1, 1, 2, 2] }]],
+    ['spessore frazionario', [{ c: 0, w: 1.9999, p: [1, 1, 2, 2] }]],
+    ['coordinata frazionaria', [{ c: 0, w: 0, p: [1.5, 2.7, 999.999, 0.0001] }]],
+    // Regressione: chiavi extra oltre a {c, w, p} vanno rifiutate.
+    ['chiave extra nel tratto', [{ c: 0, w: 0, p: [1, 1, 2, 2], junk: 'x'.repeat(1000) }]],
   ];
 
   it.each(invalid)('rifiuta: %s', async (_name, payload) => {
@@ -89,5 +95,11 @@ describe('create_letter — disegni', () => {
     ];
     const letter = await draw('emily', big);
     expect(letter.strokes).toHaveLength(200);
+  });
+
+  it('accetta i valori interi al limite (c: 11, w: 2, coordinate 0 e 1000)', async () => {
+    const input: Stroke[] = [{ c: 11, w: 2, p: [0, 0, 1000, 1000] }];
+    const letter = await draw('emily', input);
+    expect(letter.strokes).toEqual(input);
   });
 });

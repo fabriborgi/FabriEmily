@@ -28,8 +28,20 @@ begin
       raise exception 'invalid_strokes';
     end if;
 
+    -- Whitelist delle chiavi: il formato è esattamente {c, w, p}, nient'altro.
+    -- Un tratto con esattamente 3 chiavi e con c/w/p tutte presenti (già verificato
+    -- sopra) non può contenere chiavi diverse da queste tre.
+    if (select count(*) from jsonb_object_keys(v_stroke)) <> 3 then
+      raise exception 'invalid_strokes';
+    end if;
+
+    -- c e w sono indici di array (palette colori, spessori), devono essere interi:
+    -- un valore frazionario passerebbe la validazione qui ma produrrebbe
+    -- PALETTE[stroke.c] === undefined lato client.
     if (v_stroke ->> 'c')::numeric not between 0 and 11
-       or (v_stroke ->> 'w')::numeric not between 0 and 2 then
+       or (v_stroke ->> 'w')::numeric not between 0 and 2
+       or (v_stroke ->> 'c')::numeric <> trunc((v_stroke ->> 'c')::numeric)
+       or (v_stroke ->> 'w')::numeric <> trunc((v_stroke ->> 'w')::numeric) then
       raise exception 'invalid_strokes';
     end if;
 
@@ -38,12 +50,15 @@ begin
       raise exception 'invalid_strokes';
     end if;
 
+    -- Le coordinate sono punti in uno spazio logico intero 1000x1000: anche qui
+    -- i frazionari vanno rifiutati, non solo i fuori intervallo.
     if exists (
       select 1
       from jsonb_array_elements(v_stroke -> 'p') as e(value)
       where jsonb_typeof(e.value) <> 'number'
          or (e.value #>> '{}')::numeric < 0
          or (e.value #>> '{}')::numeric > 1000
+         or (e.value #>> '{}')::numeric <> trunc((e.value #>> '{}')::numeric)
     ) then
       raise exception 'invalid_strokes';
     end if;
