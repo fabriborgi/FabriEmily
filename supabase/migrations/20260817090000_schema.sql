@@ -64,6 +64,18 @@ create index letters_unread on letters (created_at) where read_at is null;
 -- ricevono "permission denied" ancora prima che RLS entri in gioco.
 -- service_role bypassa comunque le RLS (rolbypassrls), ma resta soggetto ai
 -- privilegi di tabella: gli va concesso l'accesso pieno per operare da backend.
+
+-- Seconda barriera oltre alle RLS: i privilegi di scrittura non esistono affatto.
+-- Deve stare PRIMA delle GRANT sottostanti, così le GRANT restano l'ultima parola.
+-- Attenzione: l'ACL di default concede comunque TRUNCATE, REFERENCES, TRIGGER e
+-- MAINTAIN (il pacchetto "Dxtm") anche quando arwd sono negati. Una REVOKE mirata
+-- su insert/update/delete NON tocca quei privilegi: anon e authenticated
+-- resterebbero comunque in grado di fare TRUNCATE sulle tabelle (RLS non copre
+-- TRUNCATE) e authenticated/anon potrebbero manipolare le sequence con
+-- setval/nextval. Serve una REVOKE ALL, sia su tabelle sia su sequence.
+revoke all on all tables    in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+
 grant select on couple_state, coin_rules, item_prices, coin_ledger, letters to authenticated;
 grant select, insert, update, delete on couple_state, coin_rules, item_prices, coin_ledger, letters to service_role;
 
@@ -83,8 +95,12 @@ create policy read_for_authenticated on coin_ledger for select to authenticated 
 alter table letters enable row level security;
 create policy read_for_authenticated on letters for select to authenticated using (true);
 
--- Seconda barriera oltre alle RLS: i privilegi di scrittura non esistono affatto.
-revoke insert, update, delete on all tables in schema public from anon, authenticated;
+-- Nota: questa REVOKE è un no-op e resta qui solo a scopo documentale. PUBLIC
+-- mantiene comunque USAGE sullo schema public (privilegio di default assegnato
+-- a PUBLIC alla creazione dello schema), quindi has_schema_privilege('anon',
+-- 'public','USAGE') resta true dopo questa riga: anon non viene affatto tagliato
+-- fuori dallo schema. Non revocare USAGE da PUBLIC: romperebbe ruoli interni di
+-- Supabase che ne dipendono.
 revoke usage on schema public from anon;
 
 -- Realtime
