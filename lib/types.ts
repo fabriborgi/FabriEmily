@@ -192,6 +192,10 @@ export type Database = {
         }
         Returns: number
       }
+      mark_letter_read: {
+        Args: { p_id: string; p_reader: Database["public"]["Enums"]["person"] }
+        Returns: undefined
+      }
     }
     Enums: {
       letter_kind: "text" | "drawing"
