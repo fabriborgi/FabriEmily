@@ -79,4 +79,20 @@ describe('schema e permessi', () => {
     const { error } = await admin.from('couple_state').update({ coins: -1 }).eq('id', 1);
     expect(error).not.toBeNull();
   });
+
+  // Regressione: RLS non copre TRUNCATE. Senza una REVOKE ALL esplicita su tabelle
+  // e sequence, anon e authenticated mantengono i privilegi di default (TRUNCATE,
+  // REFERENCES, TRIGGER, MAINTAIN) e possono svuotare qualunque tabella nonostante
+  // le policy di sola lettura. Ripetiamo qui esattamente il repro della review.
+  it('anon non può fare TRUNCATE su letters', async () => {
+    await expect(
+      sql(`begin; set local role anon; truncate letters; rollback;`),
+    ).rejects.toThrow(/permission denied/);
+  });
+
+  it('authenticated non può fare TRUNCATE su couple_state', async () => {
+    await expect(
+      sql(`begin; set local role authenticated; truncate couple_state; rollback;`),
+    ).rejects.toThrow(/permission denied/);
+  });
 });
