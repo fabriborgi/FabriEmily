@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { toUserMessage, call } from './rpc';
 
 describe('toUserMessage', () => {
@@ -33,9 +33,19 @@ describe('toUserMessage', () => {
   });
 
   it('non mostra mai all’utente il testo grezzo di Postgres', () => {
-    expect(toUserMessage({ message: 'duplicate key value violates unique constraint' })).not.toMatch(
-      /constraint/,
+    // Un'implementazione che si limitasse a togliere la parola "constraint" dal
+    // messaggio grezzo supererebbe un banale .not.toMatch(/constraint/) pur
+    // mostrando comunque testo del database: il confronto deve essere con il
+    // messaggio generico esatto, non con l'assenza di una singola parola.
+    expect(toUserMessage({ message: 'duplicate key value violates unique constraint' })).toBe(
+      'Something went wrong. Please try again.',
     );
+  });
+
+  it('non lancia mai, anche con un oggetto errore malformato', () => {
+    expect(toUserMessage({})).toBe('Something went wrong. Please try again.');
+    expect(toUserMessage({ message: null })).toBe('Something went wrong. Please try again.');
+    expect(toUserMessage({ message: 42 })).toBe('Something went wrong. Please try again.');
   });
 });
 
@@ -56,5 +66,20 @@ describe('call', () => {
   it('cattura anche un rifiuto della promise, tipicamente la rete', async () => {
     const result = await call(Promise.reject(new Error('Failed to fetch')));
     expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('riconosce "Load failed", il messaggio di rete di WebKit/Safari (e quindi di ogni browser su iOS)', async () => {
+    const result = await call(Promise.reject(new Error('Load failed')));
+    expect(result.error).toBe('No connection. Your work is still here — try again.');
+  });
+
+  it('si fida di navigator.onLine === false anche quando il testo dell’errore non contiene parole chiave note', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    try {
+      const result = await call(Promise.reject(new Error('boom')));
+      expect(result.error).toBe('No connection. Your work is still here — try again.');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

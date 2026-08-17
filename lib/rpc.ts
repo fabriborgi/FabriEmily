@@ -15,9 +15,19 @@ const MESSAGES: Array<[string, string]> = [
 const GENERIC = 'Something went wrong. Please try again.';
 const OFFLINE = 'No connection. Your work is still here — try again.';
 
-export function toUserMessage(error: { message: string } | null | undefined): string | null {
-  if (!error) return null;
-  const found = MESSAGES.find(([code]) => error.message.includes(code));
+/**
+ * È un confine: qualunque cosa riceva, anche un oggetto malformato costruito
+ * a mano altrove, deve restituire una stringa o null, mai lanciare. È esportata
+ * e può essere invocata da sola, fuori dal try/catch di call(), quindi non può
+ * contare su nessuno che la protegga da input inattesi.
+ */
+export function toUserMessage(error: unknown): string | null {
+  if (error === null || error === undefined) return null;
+  const message = typeof error === 'object' ? (error as { message?: unknown }).message : undefined;
+  // Un message assente o non stringa (numero, null, ...) non è un codice noto:
+  // ricade nel messaggio generico invece di far esplodere la .includes() sotto.
+  if (typeof message !== 'string') return GENERIC;
+  const found = MESSAGES.find(([code]) => message.includes(code));
   return found ? found[1] : GENERIC;
 }
 
@@ -33,6 +43,16 @@ export async function call<T>(
     return { data, error: null };
   } catch (thrown) {
     const message = thrown instanceof Error ? thrown.message : '';
-    return { data: null, error: /fetch|network|offline/i.test(message) ? OFFLINE : GENERIC };
+    // Su iOS ogni browser è WebKit, e WebKit non dice "fetch" né "network" quando
+    // la rete cade: dice "Load failed". Senza "load failed" (e "connection") il
+    // messaggio rassicurante di OFFLINE non comparirebbe mai su telefono.
+    const networkKeyword = /fetch|network|offline|load failed|connection/i.test(message);
+    // navigator può non esistere (il modulo è valutabile anche fuori dal browser),
+    // quindi l'accesso va protetto. onLine === false è un segnale diretto e
+    // affidabile in negativo, ma non sostituisce il controllo sul messaggio:
+    // può restituire true anche quando la rete c'è ma non porta da nessuna parte
+    // (per esempio dietro un captive portal), quindi resta solo un segnale in più.
+    const declaredOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    return { data: null, error: networkKeyword || declaredOffline ? OFFLINE : GENERIC };
   }
 }
