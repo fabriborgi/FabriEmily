@@ -12,6 +12,7 @@
     "test:watch": "vitest --config vitest.config.ts",
     "db:start": "npx supabase start && npx supabase status -o env > .env.test",
     "db:reset": "npx supabase db reset",
+    "db:types": "npx supabase gen types typescript --local > lib/types.ts",
     "test:int": "vitest run --config vitest.integration.config.ts"
   },
   "repository": {

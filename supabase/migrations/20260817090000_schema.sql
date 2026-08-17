@@ -58,6 +58,15 @@ create table letters (
 create index letters_created_at_desc on letters (created_at desc);
 create index letters_unread on letters (created_at) where read_at is null;
 
+-- Il CLI/template locale in uso non espone più automaticamente le tabelle nuove
+-- ai ruoli API (vedi "auto_expose_new_tables" in supabase/config.toml, ora false
+-- di default): senza queste GRANT esplicite, authenticated e service_role
+-- ricevono "permission denied" ancora prima che RLS entri in gioco.
+-- service_role bypassa comunque le RLS (rolbypassrls), ma resta soggetto ai
+-- privilegi di tabella: gli va concesso l'accesso pieno per operare da backend.
+grant select on couple_state, coin_rules, item_prices, coin_ledger, letters to authenticated;
+grant select, insert, update, delete on couple_state, coin_rules, item_prices, coin_ledger, letters to service_role;
+
 -- Permessi: lettura per chi ha superato il login, scrittura per nessuno.
 alter table couple_state enable row level security;
 create policy read_for_authenticated on couple_state for select to authenticated using (true);
