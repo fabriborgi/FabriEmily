@@ -10,8 +10,8 @@
     "start": "next start",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "db:start": "supabase start && supabase status -o env > .env.test",
-    "db:reset": "supabase db reset",
+    "db:start": "npx supabase start && npx supabase status -o env > .env.test",
+    "db:reset": "npx supabase db reset",
     "test:int": "vitest run --config vitest.integration.config.ts"
   },
   "repository": {
