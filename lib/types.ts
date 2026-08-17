@@ -159,6 +159,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_letter: {
+        Args: {
+          p_author: Database["public"]["Enums"]["person"]
+          p_body?: string
+          p_kind: Database["public"]["Enums"]["letter_kind"]
+          p_strokes?: Json
+        }
+        Returns: {
+          author: Database["public"]["Enums"]["person"]
+          body: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["letter_kind"]
+          read_at: string | null
+          strokes: Json | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "letters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       grant_coins: {
         Args: {
           p_actor: Database["public"]["Enums"]["person"]
