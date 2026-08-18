@@ -1,6 +1,6 @@
 import type { Person } from '@/features/auth/identity';
 
-export type GameType = 'tic_tac_toe';
+export type GameType = 'tic_tac_toe' | 'connect_four';
 
 export type Match = {
   id: string;

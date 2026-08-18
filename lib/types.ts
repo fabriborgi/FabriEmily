@@ -449,7 +449,7 @@ export type Database = {
       }
     }
     Enums: {
-      game_type: "tic_tac_toe"
+      game_type: "tic_tac_toe" | "connect_four"
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
       question_category: "deep" | "spicy" | "about_us" | "hypothetical" | "fun"
@@ -583,7 +583,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      game_type: ["tic_tac_toe"],
+      game_type: ["tic_tac_toe", "connect_four"],
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
       question_category: ["deep", "spicy", "about_us", "hypothetical", "fun"],
