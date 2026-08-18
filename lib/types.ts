@@ -244,6 +244,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      answer_question: {
+        Args: {
+          p_body: string
+          p_person: Database["public"]["Enums"]["person"]
+          p_round_id: string
+        }
+        Returns: {
+          answered_at: string
+          author: Database["public"]["Enums"]["person"]
+          body: string
+          round_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "question_answers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       assert_valid_strokes: { Args: { p_strokes: Json }; Returns: undefined }
       create_letter: {
         Args: {

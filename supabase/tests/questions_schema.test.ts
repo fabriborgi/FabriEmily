@@ -6,10 +6,14 @@ import { sql, signedInClient, anonClient, resetData } from './helpers';
 // di prova basta per verificare vincoli, RLS e privilegi.
 beforeEach(async () => {
   await resetData();
-  await sql(
-    `insert into questions (category, body) values ('fun', 'placeholder for schema tests')
-     on conflict do nothing`,
-  );
+  // Svuota l'intera tabella: "on conflict do nothing" non è idempotente
+  // senza un vincolo di unicità reale su (category, body), e questa suite
+  // gira in sequenza con altri file che scrivono anch'essi in `questions`
+  // (mai svuotata da resetData()). Sicuro finché il Task 5 non semina le
+  // 300 domande reali; da quel momento un `db:reset` prima della suite le
+  // ripristina.
+  await sql(`delete from questions`);
+  await sql(`insert into questions (category, body) values ('fun', 'placeholder for schema tests')`);
 });
 
 const insertRound = async (questionId: string, closedReason: 'answered' | null = null) => {

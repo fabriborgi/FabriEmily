@@ -3,14 +3,18 @@ import { sql, signedInClient, resetData } from './helpers';
 
 beforeEach(async () => {
   await resetData();
-  // `questions` non è toccata da resetData() (è seme, come coin_rules), quindi
-  // le righe di fixture di questo file vanno pulite a mano prima di ogni test:
-  // "on conflict do nothing" non basta, perché non esiste alcun vincolo di
-  // unicità su (category, body) che lo renda un'operazione idempotente — senza
-  // questa delete, ogni test aggiungerebbe altre 4 righe invece di riusare le
-  // stesse, e i test sul riciclo della categoria esaurita finirebbero per
-  // pescare un duplicato mai toccato da un test precedente.
-  await sql(`delete from questions where body in ('fun A', 'fun B', 'deep A', 'deep B')`);
+  // Isolamento completo, non solo per i propri body: questa suite gira in
+  // sequenza con altri file (fileParallelism: false) che scrivono anch'essi
+  // in `questions`, mai svuotata da resetData(). Una delete per body noti
+  // rende idempotente QUESTO file al proprio interno, ma non protegge da
+  // residui lasciati da ALTRI file eseguiti prima nello stesso run — ed è
+  // esattamente quello che ha fatto fallire il test sul riciclo della
+  // categoria esaurita quando la suite gira per intero (le righe di
+  // answer_question.test.ts restano nella categoria 'fun'). Svuotare
+  // l'intera tabella qui è sicuro: contiene solo dati di test finché il
+  // Task 5 non semina le 300 domande reali, e da quel momento in poi un
+  // `db:reset` prima della suite le ripristina.
+  await sql(`delete from questions`);
   await sql(`
     insert into questions (category, body) values
       ('fun', 'fun A'), ('fun', 'fun B'),
