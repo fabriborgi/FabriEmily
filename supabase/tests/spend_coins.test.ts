@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { sql, signedInClient, resetData } from './helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { sql, signedInClient, resetData, cleanupItems } from './helpers';
 
 const setCoins = (n: number) =>
   sql('update couple_state set coins = $1 where id = 1', [n]);
@@ -23,6 +23,8 @@ describe('spend_coins', () => {
     await resetData();
     await price('pet:koala', 150);
   });
+
+  afterEach(() => cleanupItems(['pet:koala']));
 
   it('scala il costo e ritorna il nuovo saldo', async () => {
     await setCoins(200);
