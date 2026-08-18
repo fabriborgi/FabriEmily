@@ -106,6 +106,39 @@ export type Database = {
         }
         Relationships: []
       }
+      game_matches: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          current_turn: Database["public"]["Enums"]["person"]
+          game_type: Database["public"]["Enums"]["game_type"]
+          id: string
+          started_by: Database["public"]["Enums"]["person"]
+          state: Json
+          winner: Database["public"]["Enums"]["person"] | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          current_turn: Database["public"]["Enums"]["person"]
+          game_type: Database["public"]["Enums"]["game_type"]
+          id?: string
+          started_by: Database["public"]["Enums"]["person"]
+          state: Json
+          winner?: Database["public"]["Enums"]["person"] | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          current_turn?: Database["public"]["Enums"]["person"]
+          game_type?: Database["public"]["Enums"]["game_type"]
+          id?: string
+          started_by?: Database["public"]["Enums"]["person"]
+          state?: Json
+          winner?: Database["public"]["Enums"]["person"] | null
+        }
+        Relationships: []
+      }
       item_prices: {
         Row: {
           cost: number
@@ -368,6 +401,7 @@ export type Database = {
       }
     }
     Enums: {
+      game_type: "tic_tac_toe"
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
       question_category: "deep" | "spicy" | "about_us" | "hypothetical" | "fun"
@@ -501,6 +535,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      game_type: ["tic_tac_toe"],
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
       question_category: ["deep", "spicy", "about_us", "hypothetical", "fun"],
