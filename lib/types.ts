@@ -351,6 +351,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      select_theme: { Args: { p_theme_key: string }; Returns: undefined }
       skip_question: {
         Args: {
           p_person: Database["public"]["Enums"]["person"]
