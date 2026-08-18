@@ -154,6 +154,91 @@ export type Database = {
         }
         Relationships: []
       }
+      question_answers: {
+        Row: {
+          answered_at: string
+          author: Database["public"]["Enums"]["person"]
+          body: string
+          round_id: string
+        }
+        Insert: {
+          answered_at?: string
+          author: Database["public"]["Enums"]["person"]
+          body: string
+          round_id: string
+        }
+        Update: {
+          answered_at?: string
+          author?: Database["public"]["Enums"]["person"]
+          body?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_answers_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "question_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_rounds: {
+        Row: {
+          closed_at: string | null
+          closed_by: Database["public"]["Enums"]["person"] | null
+          closed_reason: string | null
+          drawn_at: string
+          drawn_by: Database["public"]["Enums"]["person"]
+          id: string
+          question_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: Database["public"]["Enums"]["person"] | null
+          closed_reason?: string | null
+          drawn_at?: string
+          drawn_by: Database["public"]["Enums"]["person"]
+          id?: string
+          question_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: Database["public"]["Enums"]["person"] | null
+          closed_reason?: string | null
+          drawn_at?: string
+          drawn_by?: Database["public"]["Enums"]["person"]
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_rounds_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          body: string
+          category: Database["public"]["Enums"]["question_category"]
+          id: string
+        }
+        Insert: {
+          body: string
+          category: Database["public"]["Enums"]["question_category"]
+          id?: string
+        }
+        Update: {
+          body?: string
+          category?: Database["public"]["Enums"]["question_category"]
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -207,6 +292,7 @@ export type Database = {
     Enums: {
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
+      question_category: "deep" | "spicy" | "about_us" | "hypothetical" | "fun"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -339,6 +425,7 @@ export const Constants = {
     Enums: {
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
+      question_category: ["deep", "spicy", "about_us", "hypothetical", "fun"],
     },
   },
 } as const
