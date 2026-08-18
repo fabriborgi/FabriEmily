@@ -20,6 +20,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = getSupabase();
 
+    // getSession() e onAuthStateChange sono due sorgenti indipendenti che
+    // possono risolvere/emettere in qualunque ordine. Senza guardia vince
+    // l'ultima che risolve, non l'ultima che è vera: un SIGNED_OUT arrivato
+    // per primo verrebbe sovrascritto dalla getSession() partita al montaggio
+    // (quando la sessione esisteva ancora) se questa risolve dopo, resuscitando
+    // una sessione appena chiusa. `sawAuthEvent` fa sì che, una volta arrivato
+    // un evento reale, la risoluzione di getSession() venga ignorata; `cancelled`
+    // fa lo stesso se il componente è già stato smontato.
+    let sawAuthEvent = false;
+    let cancelled = false;
+
     const decide = (hasSession: boolean) => {
       if (!hasSession) return setStage('login');
       const stored = readIdentity(window.localStorage);
@@ -27,11 +38,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setStage(stored ? 'ready' : 'identity');
     };
 
-    void supabase.auth.getSession().then(({ data }) => decide(Boolean(data.session)));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) =>
-      decide(Boolean(session)),
-    );
-    return () => sub.subscription.unsubscribe();
+    void supabase.auth.getSession().then(({ data }) => {
+      if (sawAuthEvent || cancelled) return;
+      decide(Boolean(data.session));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      sawAuthEvent = true;
+      decide(Boolean(session));
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   if (stage === 'checking') return null;

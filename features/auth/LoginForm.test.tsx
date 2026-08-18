@@ -101,4 +101,41 @@ describe('LoginForm', () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
   });
+
+  it('mostra un messaggio che chiede di aspettare quando Supabase risponde con un rate limit, non quello della password sbagliata', async () => {
+    // Testo e status verificati contro il comportamento reale di auth-js per
+    // un rate limit sul login. Riprovare subito, come suggerirebbe il
+    // messaggio di password sbagliata, aggrava proprio il blocco in corso.
+    mockSignIn(async () => ({
+      error: { message: 'Request rate limit reached', status: 429 } as unknown as {
+        message: string;
+      },
+    }));
+    const onSuccess = vi.fn();
+    render(<LoginForm onSuccess={onSuccess} />);
+
+    await typeAndSubmit('qualunque');
+
+    expect(await screen.findByText('Too many attempts. Wait a minute, then try again.')).toBeDefined();
+    expect(screen.queryByText('That’s not the password. Try again?')).toBeNull();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('mostra un messaggio generico, che non incolpa la password, per un errore che non è né di rete né di credenziali rifiutate', async () => {
+    // "Email not confirmed" è un errore reale di Supabase, non riconducibile
+    // né a un problema di rete né a una password sbagliata: prima della
+    // correzione, describeAuthError lo presentava comunque come password
+    // sbagliata perché il binario ricadeva lì per esclusione.
+    mockSignIn(async () => ({ error: { message: 'Email not confirmed' } }));
+    const onSuccess = vi.fn();
+    render(<LoginForm onSuccess={onSuccess} />);
+
+    await typeAndSubmit('qualunque');
+
+    expect(
+      await screen.findByText('Something went wrong signing in. Please try again in a moment.'),
+    ).toBeDefined();
+    expect(screen.queryByText('That’s not the password. Try again?')).toBeNull();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
 });
