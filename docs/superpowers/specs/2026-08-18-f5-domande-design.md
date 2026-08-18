@@ -207,8 +207,12 @@ Stesso impianto di F0+F1:
 ## 9. Fuori scope in questa fase
 
 Modificare o cancellare una risposta già data; statistiche su quante domande
-di ogni categoria sono state fatte; notifiche push (la card realtime in Home,
-già esistente da F0+F1, copre l'uso principale).
+di ogni categoria sono state fatte; notifiche push. Anche **una card dedicata
+in Home** per "c'è un round che aspetta la tua risposta" resta fuori scope:
+la card realtime già esistente da F0+F1 riguarda solo le lettere non lette,
+non le domande — se in una fase successiva si vorrà lo stesso trattamento per
+le domande, sarà una piccola aggiunta a `app/page.tsx`, non un prerequisito
+per usare la sezione Domande dalla sua schermata dedicata.
 
 ## 10. Criteri di accettazione
 
