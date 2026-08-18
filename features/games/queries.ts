@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase/client';
 import { call } from '@/lib/rpc';
-import type { Database } from '@/lib/types';
+import type { Database, Json } from '@/lib/types';
 import type { Person } from '@/features/auth/identity';
 import type { GameType, Match, GameTally } from './types';
 
@@ -46,7 +46,7 @@ export async function createMatch(
 ) {
   return call<Match>(
     db(client)
-      .rpc('create_match', { p_game_type: gameType, p_person: person, p_initial_state: initialState })
+      .rpc('create_match', { p_game_type: gameType, p_person: person, p_initial_state: initialState as Json })
       .single(),
   );
 }
@@ -67,7 +67,7 @@ export async function makeMove(
       .rpc('make_move', {
         p_match_id: matchId,
         p_person: person,
-        p_state: state,
+        p_state: state as Json,
         p_result: result ?? undefined,
         p_winner: winner ?? undefined,
       })
