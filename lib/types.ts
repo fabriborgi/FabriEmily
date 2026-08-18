@@ -344,6 +344,13 @@ export type Database = {
         Args: { p_id: string; p_reader: Database["public"]["Enums"]["person"] }
         Returns: undefined
       }
+      purchase_item: {
+        Args: {
+          p_actor: Database["public"]["Enums"]["person"]
+          p_item_key: string
+        }
+        Returns: undefined
+      }
       skip_question: {
         Args: {
           p_person: Database["public"]["Enums"]["person"]
