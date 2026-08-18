@@ -65,4 +65,17 @@ describe('ThemeCard', () => {
     await waitFor(() => expect(purchaseItem).toHaveBeenCalled());
     expect(purchaseItem).toHaveBeenCalledTimes(1);
   });
+
+  it('costo non ancora caricato: il pulsante mostra "Buy", non "Buy for undefined coins"', () => {
+    render(<ThemeCard theme={ocean} cost={undefined} owned={false} active={false} who="fabrizio" />);
+    const button = screen.getByRole('button', { name: 'Buy' });
+    expect(button).toBeDefined();
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('finestra di corsa fra owned stantio e active fresco: niente pulsante Buy accanto a Active', () => {
+    render(<ThemeCard theme={ocean} cost={100} owned={false} active={true} who="fabrizio" />);
+    expect(screen.getByText('Active')).toBeDefined();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
 });

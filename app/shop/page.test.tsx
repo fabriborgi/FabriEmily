@@ -51,11 +51,8 @@ describe('ShopPage', () => {
       data: { prices: fullCatalog, owned: [], activeTheme: 'default' },
     });
     render(<ShopPage />);
-    // 'Default' è nel <p className={styles.label}>, dentro il div "head",
-    // dentro il div "card": due livelli di closest('div') per arrivare alla card.
-    const defaultCard = screen.getByText('Default').closest('div')?.parentElement;
-    expect(defaultCard).not.toBeNull();
-    expect(within(defaultCard!).getByText('Active')).toBeDefined();
+    const defaultCard = screen.getByTestId('theme-card-default');
+    expect(within(defaultCard).getByText('Active')).toBeDefined();
   });
 
   it('quando un altro tema è attivo, la card Default mostra Activate (mai Buy)', () => {
@@ -64,11 +61,8 @@ describe('ShopPage', () => {
       data: { prices: fullCatalog, owned: ['theme_ocean'], activeTheme: 'theme_ocean' },
     });
     render(<ShopPage />);
-    // 'Default' è nel <p className={styles.label}>, dentro il div "head",
-    // dentro il div "card": due livelli di closest('div') per arrivare alla card.
-    const defaultCard = screen.getByText('Default').closest('div')?.parentElement;
-    expect(defaultCard).not.toBeNull();
-    expect(within(defaultCard!).getByRole('button', { name: 'Activate' })).toBeDefined();
-    expect(within(defaultCard!).queryByText(/Buy for/)).toBeNull();
+    const defaultCard = screen.getByTestId('theme-card-default');
+    expect(within(defaultCard).getByRole('button', { name: 'Activate' })).toBeDefined();
+    expect(within(defaultCard).queryByText(/Buy for/)).toBeNull();
   });
 });

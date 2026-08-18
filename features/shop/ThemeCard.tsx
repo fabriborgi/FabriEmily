@@ -62,7 +62,7 @@ export function ThemeCard({
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-testid={`theme-card-${theme.key}`}>
       <div className={styles.head}>
         <p className={styles.label}>{theme.label}</p>
         <div className={styles.swatches} aria-hidden>
@@ -85,7 +85,7 @@ export function ThemeCard({
         </button>
       )}
 
-      {!owned && (
+      {!owned && !active && (
         <button
           type="button"
           className={styles.action}
@@ -96,7 +96,9 @@ export function ThemeCard({
             ? 'Buying…'
             : busy === 'activating'
               ? 'Activating…'
-              : `Buy for ${cost} coins`}
+              : cost === undefined
+                ? 'Buy'
+                : `Buy for ${cost} coins`}
         </button>
       )}
 

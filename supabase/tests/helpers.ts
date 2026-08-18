@@ -53,7 +53,7 @@ export function anonClient(): SupabaseClient<Database> {
   });
 }
 
-/** Riporta i dati allo stato iniziale fra i test. Non toccare coin_rules né questions. */
+/** Riporta i dati allo stato iniziale fra i test. Non toccare coin_rules né questions né item_prices. */
 export async function resetData(): Promise<void> {
   await sql(`
     delete from question_answers;
