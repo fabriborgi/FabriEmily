@@ -64,3 +64,24 @@ export async function resetData(): Promise<void> {
     update couple_state set coins = 0 where id = 1;
   `);
 }
+
+/**
+ * Rimuove chirurgicamente delle domande di fixture, insieme a tutto ciò che
+ * le referenzia (round, risposte). Mai un "delete from questions"
+ * indiscriminato: questa suite gira in sequenza (fileParallelism: false) con
+ * altri file che possono già aver seminato le 300 domande reali (Task 5) o
+ * le proprie righe di fixture — una pulizia totale cancellerebbe dati di cui
+ * il chiamante non ha nulla da dire. Va invocato dall'afterEach dei file che
+ * inseriscono domande di prova, passando esattamente gli id che hanno creato.
+ */
+export async function cleanupQuestions(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  await sql(
+    `delete from question_answers where round_id in (
+       select id from question_rounds where question_id = any($1::uuid[])
+     )`,
+    [ids],
+  );
+  await sql(`delete from question_rounds where question_id = any($1::uuid[])`, [ids]);
+  await sql(`delete from questions where id = any($1::uuid[])`, [ids]);
+}

@@ -1,19 +1,30 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { sql, signedInClient, anonClient, resetData } from './helpers';
 
-// File autonomo: non si affida al seed delle 300 domande (Task 5), che può
-// non esistere ancora quando questo task viene eseguito per primo. Una riga
+// File autonomo: non si affida al seed delle 300 domande (Task 5). Una riga
 // di prova basta per verificare vincoli, RLS e privilegi.
+//
+// La riga va rimossa a fine test con una delete PER ID, non con una delete
+// per body o peggio un "delete from questions" totale: questa suite gira in
+// sequenza con altri file (fileParallelism: false) che possono già aver
+// seminato le 300 domande reali (Task 5) o le proprie righe di fixture — una
+// pulizia indiscriminata cancellerebbe dati di cui questo file non ha nulla
+// da dire. Trovato eseguendo il Task 5: una prima versione con "delete from
+// questions" nel beforeEach di più file faceva sparire il seme reale non
+// appena la suite completa arrivava al primo di quei file in ordine
+// alfabetico.
+let fixtureQuestionId: string;
+
 beforeEach(async () => {
   await resetData();
-  // Svuota l'intera tabella: "on conflict do nothing" non è idempotente
-  // senza un vincolo di unicità reale su (category, body), e questa suite
-  // gira in sequenza con altri file che scrivono anch'essi in `questions`
-  // (mai svuotata da resetData()). Sicuro finché il Task 5 non semina le
-  // 300 domande reali; da quel momento un `db:reset` prima della suite le
-  // ripristina.
-  await sql(`delete from questions`);
-  await sql(`insert into questions (category, body) values ('fun', 'placeholder for schema tests')`);
+  const rows = await sql<{ id: string }>(
+    `insert into questions (category, body) values ('fun', 'placeholder for schema tests') returning id`,
+  );
+  fixtureQuestionId = rows[0].id;
+});
+
+afterEach(async () => {
+  await sql(`delete from questions where id = $1`, [fixtureQuestionId]);
 });
 
 const insertRound = async (questionId: string, closedReason: 'answered' | null = null) => {

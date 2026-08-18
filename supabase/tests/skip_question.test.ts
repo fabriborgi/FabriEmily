@@ -1,12 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { sql, resetData } from './helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { sql, resetData, cleanupQuestions } from './helpers';
+
+// Vedi draw_question.test.ts per la motivazione: mai una delete
+// indiscriminata su `questions`, che cancellerebbe il seme reale (Task 5) o
+// le fixture di altri file. Si traccia l'id creato e si ripulisce
+// chirurgicamente in afterEach.
+let fixtureIds: string[] = [];
 
 beforeEach(async () => {
   await resetData();
-  // Svuota l'intera tabella per isolamento fra file (vedi la lezione
-  // generale annotata nel piano): resetData() non tocca questions.
-  await sql(`delete from questions`);
-  await sql(`insert into questions (category, body) values ('fun', 'domanda di prova')`);
+  const rows = await sql<{ id: string }>(
+    `insert into questions (category, body) values ('fun', 'domanda di prova') returning id`,
+  );
+  fixtureIds = rows.map((r) => r.id);
+});
+
+afterEach(async () => {
+  await cleanupQuestions(fixtureIds);
+  fixtureIds = [];
 });
 
 const openRound = async () =>

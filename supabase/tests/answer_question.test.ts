@@ -1,16 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { sql, signedInClient, resetData } from './helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { sql, signedInClient, resetData, cleanupQuestions } from './helpers';
+
+// Vedi draw_question.test.ts per la motivazione: mai una delete
+// indiscriminata su `questions`, che cancellerebbe il seme reale (Task 5) o
+// le fixture di altri file. Si traccia ogni id creato — dal fixture di base
+// e da quelli aggiunti ad hoc nel test sul tetto giornaliero — e si ripulisce
+// chirurgicamente in afterEach. openRound() pesca senza filtro di categoria:
+// può capitare su una domanda reale del seme invece che sul fixture, il che
+// va bene, perché questi test verificano solo la meccanica di round/risposta,
+// mai quale domanda specifica sia stata pescata.
+let fixtureIds: string[] = [];
 
 beforeEach(async () => {
   await resetData();
-  // Svuota l'intera tabella, non solo i propri body noti: questa suite gira
-  // in sequenza con altri file (fileParallelism: false), e un'eventuale
-  // pulizia parziale lascerebbe comunque residui che inquinano il conteggio
-  // esatto richiesto da altri file (vedi draw_question.test.ts). Sicuro
-  // finché il Task 5 non semina le 300 domande reali; da quel momento un
-  // `db:reset` prima della suite le ripristina.
-  await sql(`delete from questions`);
-  await sql(`insert into questions (category, body) values ('fun', 'domanda di prova')`);
+  const rows = await sql<{ id: string }>(
+    `insert into questions (category, body) values ('fun', 'domanda di prova') returning id`,
+  );
+  fixtureIds = rows.map((r) => r.id);
+});
+
+afterEach(async () => {
+  await cleanupQuestions(fixtureIds);
+  fixtureIds = [];
 });
 
 const openRound = async () =>
@@ -89,7 +100,11 @@ describe('answer_question', () => {
 
   it('rispetta il tetto giornaliero per persona (5 al giorno)', async () => {
     for (let i = 0; i < 6; i++) {
-      await sql(`insert into questions (category, body) values ('fun', $1)`, [`q${i}`]);
+      const [{ id: qid }] = await sql<{ id: string }>(
+        `insert into questions (category, body) values ('fun', $1) returning id`,
+        [`q${i}`],
+      );
+      fixtureIds.push(qid); // tracciato per la pulizia in afterEach
       const roundId = await openRound();
       await answer(roundId, 'fabrizio', `risposta ${i}`);
       await sql(`update question_rounds set closed_at = now(), closed_reason = 'skipped'
