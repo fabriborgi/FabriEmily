@@ -1,0 +1,42 @@
+.grid { display: grid; gap: var(--space-3); }
+
+.card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.label { font: var(--font-lead); margin: 0; }
+
+/* Colori letterali deliberati: uno swatch mostra il tema che rappresenta,
+   non quello attivo. Vedi Global Constraints del piano. */
+.swatches { display: flex; gap: var(--space-2); }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
+
+.action {
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-lead);
+}
+.action:disabled { opacity: 0.45; }
+
+.activeLabel {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--fg-muted);
+  font: var(--font-lead);
+}
+
+.error { font: var(--font-small); color: var(--danger); margin: 0; }
+.muted { font: var(--font-small); color: var(--fg-muted); }
