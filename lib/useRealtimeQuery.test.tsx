@@ -141,6 +141,43 @@ describe('useRealtimeQuery', () => {
     await waitFor(() => expect(result.current.offline).toBe(false));
   });
 
+  it('non lascia che un errore stantio sporchi dati freschi già arrivati', async () => {
+    // Speculare al test sul fuori ordine, ma sul percorso di fallimento: il
+    // guardiano di sequenza serve anche nel ramo catch, altrimenti un
+    // caricamento partito prima e fallito dopo mostra un banner di errore
+    // sopra dati validi già a schermo.
+    const f = fakeClient();
+    let rejectSlow: (reason: Error) => void = () => {};
+    const slow = new Promise<string[]>((_resolve, reject) => {
+      rejectSlow = reject;
+    });
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(['iniziale'])
+      .mockResolvedValueOnce(['iniziale'])
+      .mockImplementationOnce(() => slow) // lento, fallira' per ultimo
+      .mockResolvedValueOnce(['fresco']); // veloce, riesce per primo
+    const { result } = renderHook(() =>
+      useRealtimeQuery({ tables: ['letters'], fetcher, client: f.client as never }),
+    );
+    await waitFor(() => expect(result.current.data).toEqual(['iniziale']));
+
+    await act(async () => {
+      result.current.refetch();
+    });
+    await act(async () => {
+      result.current.refetch();
+    });
+    await waitFor(() => expect(result.current.data).toEqual(['fresco']));
+
+    await act(async () => {
+      rejectSlow(new Error('caduta tardiva del caricamento sorpassato'));
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(result.current.data).toEqual(['fresco']);
+    expect(result.current.error).toBeNull();
+  });
+
   it('non lascia che una risposta lenta sovrascriva dati più recenti già arrivati (fuori ordine)', async () => {
     const f = fakeClient();
     let resolveSlow: (value: string[]) => void = () => {};
