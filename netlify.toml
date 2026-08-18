@@ -11,6 +11,12 @@
 
 [build]
   command = "npm run build"
+  # Senza questa riga Netlify usa la publish directory rimasta nel pannello da
+  # quando il repo conteneva solo il README, che punta a una cartella vuota:
+  # il sito rispondeva 404 anche sui file statici di public/, prova che non
+  # stava pubblicando nulla. Per Next.js la cartella e' .next, e il runtime
+  # Next di Netlify sa cosa farci.
+  publish = ".next"
 
 [build.environment]
   # In locale si sviluppa su Node 26, ma qui si pinna la LTS che Netlify
@@ -26,3 +32,8 @@
 #   NEXT_PUBLIC_COUPLE_EMAIL
 # Senza di esse il build riesce ma l'app si ferma all'avvio con un errore
 # esplicito che nomina la variabile mancante (lib/env.ts).
+
+# Dichiarato esplicitamente invece di affidarsi al rilevamento automatico, che
+# su questo sito e' avvenuto quando il repo non conteneva ancora un'applicazione.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
