@@ -105,3 +105,16 @@
 }
 .error { font: var(--font-small); color: var(--danger); margin: 0; }
 .muted { font: var(--font-small); color: var(--fg-muted); }
+
+.historyList { display: grid; gap: var(--space-3); }
+.historyEntry {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.historyHead { display: flex; align-items: center; gap: var(--space-2); }
+.historyDate { font: var(--font-small); color: var(--fg-muted); margin-left: auto; }
+.historyQuestion { font: var(--font-lead); margin: 0; overflow-wrap: anywhere; }

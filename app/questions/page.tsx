@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useIdentity } from '@/features/auth/IdentityProvider';
 import { useActiveRound } from '@/features/questions/useActiveRound';
 import { CategoryPicker } from '@/features/questions/CategoryPicker';
@@ -21,6 +22,9 @@ export default function QuestionsPage() {
 
   return (
     <>
+      <Link href="/questions/history" className={styles.historyLink}>
+        See past questions →
+      </Link>
       {offline && <OfflineStrip />}
       {error && (
         <p className={styles.error} role="alert">
