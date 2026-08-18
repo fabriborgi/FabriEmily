@@ -12,10 +12,14 @@ export const metadata: Metadata = {
 };
 
 // `viewportFit: cover` è ciò che rende utile env(safe-area-inset-*) sugli iPhone con notch.
+// Nessun maximumScale: lo zoom con le dita resta disponibile. Di solito lo si blocca per
+// impedire a iOS di ingrandire da solo la pagina al focus su un campo di testo, ma quel
+// problema è già risolto dando ai campi un carattere da 17px (sopra i 16px iOS non
+// interviene). Bloccarlo qui lascerebbe solo il danno: un'app fatta per leggere lettere
+// in cui non si può ingrandire il testo.
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: 'cover',
   themeColor: '#faf6f0',
 };
