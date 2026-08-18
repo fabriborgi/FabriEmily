@@ -203,4 +203,80 @@ describe('AuthGate', () => {
 
     expect(fake.unsubscribe).toHaveBeenCalledTimes(1);
   });
+
+  it('un INITIAL_SESSION senza sessione non blocca la getSession() che arriva con una sessione valida', async () => {
+    // auth-js emette sempre un INITIAL_SESSION poco dopo la sottoscrizione e,
+    // se durante l'inizializzazione incontra un errore transitorio (es. un
+    // AuthRetryableFetchError di rete), lo emette con session: null anche
+    // quando una sessione valida esiste davvero (verificato in
+    // GoTrueClient.js). Questo evento non deve impedire alla getSession()
+    // ancora in volo di far entrare l'utente in app.
+    const fake = setup();
+    render(
+      <AuthGate>
+        <div>children-marker</div>
+      </AuthGate>,
+    );
+
+    await act(async () => {
+      fake.fireAuthEvent('INITIAL_SESSION', null);
+    });
+
+    await act(async () => {
+      fake.resolveSession({ user: { id: '1' } });
+    });
+
+    expect(screen.queryByLabelText('Our password')).toBeNull();
+    expect(await screen.findByText(/holding the phone/i)).toBeDefined();
+  });
+
+  it('un INITIAL_SESSION con sessione valida non viene sovrascritto da una getSession() tardiva', async () => {
+    // Controllo di non regressione: un INITIAL_SESSION che porta davvero una
+    // sessione è un evento reale a tutti gli effetti e deve continuare a
+    // vincere su una getSession() tardiva, esattamente come SIGNED_OUT.
+    window.localStorage.setItem(IDENTITY_KEY, 'emily');
+    const fake = setup();
+    render(
+      <AuthGate>
+        <div>children-marker</div>
+      </AuthGate>,
+    );
+
+    await act(async () => {
+      fake.fireAuthEvent('INITIAL_SESSION', { user: { id: '1' } });
+    });
+    await screen.findByText('children-marker');
+
+    await act(async () => {
+      fake.resolveSession(null);
+    });
+
+    expect(screen.queryByText('children-marker')).not.toBeNull();
+    expect(screen.queryByLabelText('Our password')).toBeNull();
+  });
+
+  it('una getSession() risolta dopo lo smontaggio non aggiorna lo stato', async () => {
+    // React 18+ non genera più un warning in console per un setState su un
+    // componente smontato (è un no-op silenzioso), quindi un warning di
+    // console non è un segnale su cui questo test può contare. Verifica
+    // invece un effetto collaterale osservabile: se il flag `cancelled` non
+    // bloccasse la risoluzione tardiva, decide(true) chiamerebbe
+    // readIdentity(), che legge da localStorage — quella lettura non deve
+    // avvenire dopo lo smontaggio.
+    const fake = setup();
+    const { unmount } = render(
+      <AuthGate>
+        <div>children-marker</div>
+      </AuthGate>,
+    );
+
+    unmount();
+    const getItemSpy = vi.spyOn(window.localStorage, 'getItem');
+
+    await act(async () => {
+      fake.resolveSession({ user: { id: '1' } });
+    });
+
+    expect(getItemSpy).not.toHaveBeenCalled();
+  });
 });

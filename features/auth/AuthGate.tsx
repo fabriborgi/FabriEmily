@@ -42,7 +42,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
       if (sawAuthEvent || cancelled) return;
       decide(Boolean(data.session));
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // auth-js emette SEMPRE un INITIAL_SESSION poco dopo la sottoscrizione
+      // (vedi GoTrueClient.js) e, se durante l'inizializzazione incontra un
+      // errore transitorio — incluso un AuthRetryableFetchError, cioè un
+      // guasto di rete passeggero — lo emette con session: null anche quando
+      // una sessione valida esiste davvero. Non è quindi un'affermazione
+      // affidabile sullo stato: se lo trattassimo come un evento reale
+      // bloccheremmo per sempre la getSession() ancora in volo (quella che
+      // sta per portare la sessione vera), e l'utente resterebbe bloccato
+      // sul login pur avendo una sessione valida. Per questo lo ignoriamo
+      // del tutto — non alza sawAuthEvent e non decide nulla — mentre ogni
+      // altro evento (SIGNED_OUT, SIGNED_IN, o un INITIAL_SESSION che porta
+      // davvero una sessione) resta un segnale reale che deve vincere su una
+      // getSession() tardiva, com'era già garantito prima di questo fix.
+      const isUnreliableInitialSession = event === 'INITIAL_SESSION' && !session;
+      if (isUnreliableInitialSession) return;
       sawAuthEvent = true;
       decide(Boolean(session));
     });
