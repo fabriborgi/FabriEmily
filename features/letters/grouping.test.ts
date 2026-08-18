@@ -46,6 +46,41 @@ describe('groupByMonth', () => {
   });
 });
 
+describe('coerenza fra i due fusi', () => {
+  it('mette una lettera nello stesso mese per entrambe le persone', () => {
+    // 1 agosto 03:30 UTC = 31 luglio 23:30 a Buffalo, 1 agosto 05:30 in Italia.
+    // Con il fuso di chi guarda, le due persone vedrebbero due mesi diversi
+    // per la stessa identica lettera. Il fuso fisso lo impedisce.
+    const groups = groupByMonth([letter({ created_at: '2026-08-01T03:30:00Z' })]);
+    expect(groups[0].label).toBe('July 2026');
+  });
+
+  it('non dipende dal fuso del dispositivo che la mostra', () => {
+    const iso = '2026-08-01T03:30:00Z';
+    const atRome = new Date(iso).toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Europe/Rome',
+    });
+    // Prova che il fuso locale darebbe un risultato diverso: se un giorno
+    // questa asserzione fallisse, il test sopra non starebbe piu' provando nulla.
+    expect(atRome).toBe('August 2026');
+    expect(groupByMonth([letter({ created_at: iso })])[0].label).not.toBe(atRome);
+  });
+});
+
+describe('raggruppamento su liste non ordinate', () => {
+  it('unisce le lettere dello stesso mese anche se non sono contigue', () => {
+    const groups = groupByMonth([
+      letter({ created_at: '2026-08-14T12:00:00Z' }),
+      letter({ created_at: '2026-07-30T12:00:00Z' }),
+      letter({ created_at: '2026-08-02T12:00:00Z' }),
+    ]);
+    expect(groups.map((g) => g.label)).toEqual(['August 2026', 'July 2026']);
+    expect(groups[0].letters).toHaveLength(2);
+  });
+});
+
 describe('isUnread', () => {
   it('è non letta se l’ha scritta l’altro e non è stata aperta', () => {
     expect(isUnread(letter({ author: 'emily', read_at: null }), 'fabrizio')).toBe(true);
