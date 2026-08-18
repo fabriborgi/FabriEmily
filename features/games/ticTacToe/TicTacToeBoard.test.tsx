@@ -11,10 +11,10 @@ vi.mock('../queries', () => ({
 }));
 
 const useActiveMatch = vi.fn();
-vi.mock('../useActiveMatch', () => ({ useActiveMatch: () => useActiveMatch() }));
+vi.mock('../useActiveMatch', () => ({ useActiveMatch: (...args: unknown[]) => useActiveMatch(...args) }));
 
 const useGameHistory = vi.fn();
-vi.mock('../useGameHistory', () => ({ useGameHistory: () => useGameHistory() }));
+vi.mock('../useGameHistory', () => ({ useGameHistory: (...args: unknown[]) => useGameHistory(...args) }));
 
 const baseState = { loading: false, error: null, offline: false, refetch: vi.fn() };
 const baseHistory = { ...baseState, data: { fabrizio: 0, emily: 0, draws: 0 } };
@@ -45,6 +45,13 @@ describe('TicTacToeBoard', () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: null });
     render(<TicTacToeBoard who="fabrizio" />);
     expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
+  });
+
+  it('interroga useActiveMatch/useGameHistory con il game_type "tic_tac_toe"', () => {
+    useActiveMatch.mockReturnValue({ ...baseState, data: null });
+    render(<TicTacToeBoard who="fabrizio" />);
+    expect(useActiveMatch).toHaveBeenCalledWith('tic_tac_toe');
+    expect(useGameHistory).toHaveBeenCalledWith('tic_tac_toe');
   });
 
   it('avviando una partita, chiama createMatch con la griglia vuota', async () => {

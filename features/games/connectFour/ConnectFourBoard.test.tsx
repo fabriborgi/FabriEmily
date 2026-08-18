@@ -12,10 +12,10 @@ vi.mock('../queries', () => ({
 }));
 
 const useActiveMatch = vi.fn();
-vi.mock('../useActiveMatch', () => ({ useActiveMatch: () => useActiveMatch() }));
+vi.mock('../useActiveMatch', () => ({ useActiveMatch: (...args: unknown[]) => useActiveMatch(...args) }));
 
 const useGameHistory = vi.fn();
-vi.mock('../useGameHistory', () => ({ useGameHistory: () => useGameHistory() }));
+vi.mock('../useGameHistory', () => ({ useGameHistory: (...args: unknown[]) => useGameHistory(...args) }));
 
 const baseState = { loading: false, error: null, offline: false, refetch: vi.fn() };
 const baseHistory = { ...baseState, data: { fabrizio: 0, emily: 0, draws: 0 } };
@@ -47,6 +47,26 @@ describe('ConnectFourBoard', () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: null });
     render(<ConnectFourBoard who="fabrizio" />);
     expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
+  });
+
+  it('interroga useActiveMatch/useGameHistory con il game_type "connect_four"', () => {
+    useActiveMatch.mockReturnValue({ ...baseState, data: null });
+    render(<ConnectFourBoard who="fabrizio" />);
+    expect(useActiveMatch).toHaveBeenCalledWith('connect_four');
+    expect(useGameHistory).toHaveBeenCalledWith('connect_four');
+  });
+
+  it('il simbolo di una pedina dipende da started_by, non da chi guarda', () => {
+    const cells = [...EMPTY_CELLS];
+    cells[(ROWS - 1) * COLUMNS + 0] = 'emily';
+    cells[(ROWS - 1) * COLUMNS + 1] = 'fabrizio';
+    useActiveMatch.mockReturnValue({
+      ...baseState,
+      data: openMatch({ started_by: 'emily', cells }),
+    });
+    render(<ConnectFourBoard who="fabrizio" />);
+    expect(screen.getByRole('button', { name: /Emily/ }).textContent).toBe('●');
+    expect(screen.getByRole('button', { name: /Fabrizio/ }).textContent).toBe('○');
   });
 
   it('avviando una partita, chiama createMatch con la griglia 7×6 vuota', async () => {
