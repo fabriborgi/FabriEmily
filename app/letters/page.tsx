@@ -1,9 +1,52 @@
-import { EmptyState } from '@/components/ui/EmptyState';
+'use client';
 
-// Segnaposto: l'archivio vero arriva nel task 14. Esiste gia' adesso perche' la
-// voce "Letters" e' nella tab bar dal task 11, e senza questa pagina il tocco
-// finirebbe sul 404 generico di Next, rompendo la coerenza visiva proprio nella
-// sezione principale dell'app.
+import Link from 'next/link';
+import { useIdentity } from '@/features/auth/IdentityProvider';
+import { useLetters } from '@/features/letters/useLetters';
+import { groupByMonth } from '@/features/letters/grouping';
+import { LetterCard } from '@/features/letters/LetterCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { OfflineStrip } from '@/components/ui/OfflineStrip';
+import styles from '@/features/letters/letters.module.css';
+
 export default function LettersPage() {
-  return <EmptyState title="Letters" body="Your letters and drawings will live here." />;
+  const { who } = useIdentity();
+  const { data, loading, offline, error } = useLetters();
+  const letters = data ?? [];
+
+  return (
+    <>
+      {offline && <OfflineStrip />}
+      <div className={styles.actions}>
+        <Link href="/letters/new" className={styles.primaryAction}>
+          Write a letter
+        </Link>
+        <Link href="/letters/draw" className={styles.secondaryAction}>
+          Draw something
+        </Link>
+      </div>
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      {loading && letters.length === 0 && <p className={styles.muted}>Opening the archive…</p>}
+
+      {!loading && letters.length === 0 && (
+        <EmptyState
+          title="Nothing here yet"
+          body="Write the first letter, or draw something silly."
+        />
+      )}
+
+      {groupByMonth(letters).map((group) => (
+        <section key={group.label} className={styles.month}>
+          <h2 className={styles.monthLabel}>{group.label}</h2>
+          <div className={styles.list}>
+            {group.letters.map((letter) => (
+              <LetterCard key={letter.id} letter={letter} who={who} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
+  );
 }
