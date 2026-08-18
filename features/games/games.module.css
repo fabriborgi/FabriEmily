@@ -1,0 +1,76 @@
+.muted { font: var(--font-small); color: var(--fg-muted); }
+.error { font: var(--font-small); color: var(--danger); margin: 0; }
+
+.status {
+  text-align: center;
+  font: var(--font-lead);
+  color: var(--fg-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.tally {
+  text-align: center;
+  font: var(--font-small);
+  color: var(--fg-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.newGame {
+  display: block;
+  margin: var(--space-6) auto;
+  min-height: 52px;
+  padding: 0 var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-lead);
+}
+.newGame:disabled { opacity: 0.45; }
+
+.gameShell { display: grid; gap: var(--space-3); }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  max-width: 320px;
+  margin: 0 auto;
+}
+.cell {
+  aspect-ratio: 1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-title);
+}
+.cell:disabled { opacity: 1; }
+
+.list { display: grid; gap: var(--space-3); }
+.gameCard {
+  display: block;
+  min-height: 52px;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-lead);
+  text-decoration: none;
+}
+.gameCardDisabled {
+  min-height: 52px;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg-muted);
+  font: var(--font-lead);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.soon { font: var(--font-small); }
