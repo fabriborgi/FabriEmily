@@ -17,6 +17,9 @@ const MESSAGES: Array<[string, string]> = [
   ['no_questions_available', "There are no questions in that category yet."],
   ['already_owned', 'You already own that.'],
   ['theme_not_owned', "You don't own that theme yet."],
+  ['match_already_open', "There's already a game waiting for a move."],
+  ['not_your_turn', "It's not your turn yet."],
+  ['match_already_closed', 'That game already ended. Refreshing…'],
 ];
 
 const GENERIC = 'Something went wrong. Please try again.';
