@@ -2,11 +2,11 @@
 
 import { useRef, useState } from 'react';
 import type { Person } from '@/features/auth/identity';
-import type { THEMES } from './themes';
+import type { ThemeSwatches } from './themes';
 import { purchaseItem, activateTheme } from './queries';
 import styles from './shop.module.css';
 
-type ThemeDef = (typeof THEMES)[number];
+type ThemeDef = { key: string; label: string; swatches: ThemeSwatches };
 
 export function ThemeCard({
   theme,

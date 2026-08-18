@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import ShopPage from './page';
 
 vi.mock('@/features/auth/IdentityProvider', () => ({
@@ -27,6 +27,15 @@ describe('ShopPage', () => {
     expect(screen.getByText('Forest')).toBeDefined();
   });
 
+  it('mostra sempre una card Default accanto ai 4 temi acquistabili', () => {
+    useShop.mockReturnValue({
+      ...baseState,
+      data: { prices: fullCatalog, owned: [], activeTheme: 'default' },
+    });
+    render(<ShopPage />);
+    expect(screen.getByText('Default')).toBeDefined();
+  });
+
   it('segnala il tema attivo', () => {
     useShop.mockReturnValue({
       ...baseState,
@@ -34,5 +43,32 @@ describe('ShopPage', () => {
     });
     render(<ShopPage />);
     expect(screen.getByText('Active')).toBeDefined();
+  });
+
+  it('quando activeTheme è default, la card Default mostra Active', () => {
+    useShop.mockReturnValue({
+      ...baseState,
+      data: { prices: fullCatalog, owned: [], activeTheme: 'default' },
+    });
+    render(<ShopPage />);
+    // 'Default' è nel <p className={styles.label}>, dentro il div "head",
+    // dentro il div "card": due livelli di closest('div') per arrivare alla card.
+    const defaultCard = screen.getByText('Default').closest('div')?.parentElement;
+    expect(defaultCard).not.toBeNull();
+    expect(within(defaultCard!).getByText('Active')).toBeDefined();
+  });
+
+  it('quando un altro tema è attivo, la card Default mostra Activate (mai Buy)', () => {
+    useShop.mockReturnValue({
+      ...baseState,
+      data: { prices: fullCatalog, owned: ['theme_ocean'], activeTheme: 'theme_ocean' },
+    });
+    render(<ShopPage />);
+    // 'Default' è nel <p className={styles.label}>, dentro il div "head",
+    // dentro il div "card": due livelli di closest('div') per arrivare alla card.
+    const defaultCard = screen.getByText('Default').closest('div')?.parentElement;
+    expect(defaultCard).not.toBeNull();
+    expect(within(defaultCard!).getByRole('button', { name: 'Activate' })).toBeDefined();
+    expect(within(defaultCard!).queryByText(/Buy for/)).toBeNull();
   });
 });

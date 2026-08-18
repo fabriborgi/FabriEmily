@@ -2,7 +2,7 @@
 
 import { useIdentity } from '@/features/auth/IdentityProvider';
 import { useShop } from '@/features/shop/useShop';
-import { THEMES } from '@/features/shop/themes';
+import { THEMES, DEFAULT_THEME } from '@/features/shop/themes';
 import { ThemeCard } from '@/features/shop/ThemeCard';
 import { OfflineStrip } from '@/components/ui/OfflineStrip';
 import styles from '@/features/shop/shop.module.css';
@@ -22,6 +22,13 @@ export default function ShopPage() {
         </p>
       )}
       <div className={styles.grid}>
+        <ThemeCard
+          theme={DEFAULT_THEME}
+          cost={undefined}
+          owned={true}
+          active={data?.activeTheme === 'default'}
+          who={who}
+        />
         {THEMES.map((theme) => (
           <ThemeCard
             key={theme.key}
