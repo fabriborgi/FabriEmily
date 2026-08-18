@@ -396,6 +396,31 @@ export type Database = {
         }
         Returns: number
       }
+      make_move: {
+        Args: {
+          p_match_id: string
+          p_person: Database["public"]["Enums"]["person"]
+          p_result?: string
+          p_state: Json
+          p_winner?: Database["public"]["Enums"]["person"]
+        }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          current_turn: Database["public"]["Enums"]["person"]
+          game_type: Database["public"]["Enums"]["game_type"]
+          id: string
+          started_by: Database["public"]["Enums"]["person"]
+          state: Json
+          winner: Database["public"]["Enums"]["person"] | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       mark_letter_read: {
         Args: { p_id: string; p_reader: Database["public"]["Enums"]["person"] }
         Returns: undefined
