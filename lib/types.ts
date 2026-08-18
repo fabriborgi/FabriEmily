@@ -343,6 +343,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_match: {
+        Args: {
+          p_game_type: Database["public"]["Enums"]["game_type"]
+          p_initial_state: Json
+          p_person: Database["public"]["Enums"]["person"]
+        }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          current_turn: Database["public"]["Enums"]["person"]
+          game_type: Database["public"]["Enums"]["game_type"]
+          id: string
+          started_by: Database["public"]["Enums"]["person"]
+          state: Json
+          winner: Database["public"]["Enums"]["person"] | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       draw_question: {
         Args: {
           p_category?: Database["public"]["Enums"]["question_category"]
