@@ -1,0 +1,78 @@
+.app {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+}
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.headerTitle { font: var(--font-lead); margin: 0; }
+.whoButton {
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg-muted);
+  font: var(--font-small);
+  padding: 0 var(--space-3);
+}
+.coinPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-lead);
+  text-decoration: none;
+}
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-height: 44px;
+  text-decoration: none;
+  color: var(--fg-muted);
+  font-size: 20px;
+}
+.tab[aria-current='page'] { color: var(--accent); }
+.tabLabel { font: var(--font-small); }
+.offline {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--line);
+  color: var(--fg);
+  font: var(--font-small);
+  text-align: center;
+}
+.empty { padding: var(--space-6) var(--space-4); text-align: center; }
+.emptyTitle { font: var(--font-lead); margin: 0 0 var(--space-2); }
+.emptyBody { font: var(--font-body); color: var(--fg-muted); margin: 0; }
+.content { padding: var(--space-4); display: grid; gap: var(--space-4); align-content: start; }
