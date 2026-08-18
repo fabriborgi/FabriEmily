@@ -10,6 +10,11 @@ const MESSAGES: Array<[string, string]> = [
   ['empty_letter', 'Write something first.'],
   ['unknown_item', "That item doesn't exist anymore."],
   ['unknown_coin_reason', 'Something went wrong. Please try again.'],
+  ['round_already_open', "There's already a question waiting for an answer."],
+  ['empty_answer', 'Write an answer first.'],
+  ['round_already_closed', 'That question was already resolved. Refreshing…'],
+  ['already_answered', "You've already answered this one."],
+  ['no_questions_available', "There are no questions in that category yet."],
 ];
 
 const GENERIC = 'Something went wrong. Please try again.';
