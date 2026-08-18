@@ -268,6 +268,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      draw_question: {
+        Args: {
+          p_category?: Database["public"]["Enums"]["question_category"]
+          p_person: Database["public"]["Enums"]["person"]
+        }
+        Returns: {
+          closed_at: string | null
+          closed_by: Database["public"]["Enums"]["person"] | null
+          closed_reason: string | null
+          drawn_at: string
+          drawn_by: Database["public"]["Enums"]["person"]
+          id: string
+          question_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "question_rounds"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       grant_coins: {
         Args: {
           p_actor: Database["public"]["Enums"]["person"]
