@@ -35,6 +35,9 @@ export function DrawingCanvas({
   const [width, setWidth] = useState(1);
   const [notice, setNotice] = useState<string | null>(null);
   const drawing = useRef<Stroke | null>(null);
+  // Il dito che ha iniziato il tratto in corso: un palmo appoggiato o un secondo
+  // dito genera altri pointerId, e non devono toccare `drawing`.
+  const activePointerId = useRef<number | null>(null);
 
   // Bozza recuperata all'apertura: se l'app è stata scaricata dalla memoria, il disegno è ancora qui.
   useEffect(() => {
@@ -81,18 +84,22 @@ export function DrawingCanvas({
   };
 
   function onPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
+    // Un tratto è già in corso: questo è un secondo contatto (palmo, altro dito),
+    // non sostituisce quello che si sta disegnando.
+    if (drawing.current) return;
     if (!canAddStroke(strokes)) {
       setNotice(`That's ${MAX_STROKES} strokes — send it before adding more.`);
       return;
     }
     event.currentTarget.setPointerCapture(event.pointerId);
+    activePointerId.current = event.pointerId;
     const { x, y } = pointToUnits(event);
     drawing.current = startStroke(color, width, x, y);
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
     const current = drawing.current;
-    if (!current) return;
+    if (!current || event.pointerId !== activePointerId.current) return;
     const { x, y } = pointToUnits(event);
     const next = appendPoint(current, x, y);
     // Identità invariata = punto scartato: niente ridisegno.
@@ -101,10 +108,15 @@ export function DrawingCanvas({
     repaint([...strokes, next]);
   }
 
-  function onPointerUp() {
+  function onPointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (event.pointerId !== activePointerId.current) return;
     const current = drawing.current;
     drawing.current = null;
-    if (current) setStrokes((list) => [...list, current]);
+    activePointerId.current = null;
+    if (current) {
+      setStrokes((list) => [...list, current]);
+      setNotice(null);
+    }
   }
 
   const missing = MIN_STROKES_FOR_REWARD - strokes.length;
@@ -156,7 +168,10 @@ export function DrawingCanvas({
 
         <button
           className={styles.tool}
-          onClick={() => setStrokes(undo)}
+          onClick={() => {
+            setStrokes(undo);
+            setNotice(null);
+          }}
           disabled={strokes.length === 0}
         >
           Undo
@@ -168,6 +183,7 @@ export function DrawingCanvas({
             if (window.confirm('Clear the whole drawing?')) {
               setStrokes([]);
               clearDraft(window.localStorage);
+              setNotice(null);
             }
           }}
         >

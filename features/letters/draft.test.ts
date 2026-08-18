@@ -47,6 +47,33 @@ describe('bozza locale del disegno', () => {
     const storage = fakeStorage();
     saveDraft(storage, strokes);
     saveDraft(storage, []);
-    expect(loadDraft(storage)).toEqual([]);
+    // Verifica diretta sullo storage, non tramite loadDraft: loadDraft restituisce
+    // [] anche per altri motivi (bozza assente, illeggibile, formato invalido), quindi
+    // da sola non prova che la chiave sia stata rimossa — servirebbe una chiave
+    // fantasma scritta per sempre.
+    expect(storage.getItem(DRAFT_KEY)).toBeNull();
+  });
+
+  // localStorage può lanciare per davvero (Safari in navigazione privata, quota
+  // esaurita — stesso motivo di features/auth/identity.ts): la bozza non è un dato
+  // critico, quindi ogni funzione deve fallire in silenzio piuttosto che impedire
+  // l'apertura dell'editor.
+  it('non lancia quando lo storage fallisce (quota esaurita o navigazione privata)', () => {
+    const throwingStorage = {
+      getItem: () => {
+        throw new Error('SecurityError');
+      },
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+      removeItem: () => {
+        throw new Error('SecurityError');
+      },
+    };
+    expect(() => saveDraft(throwingStorage, strokes)).not.toThrow();
+    expect(() => saveDraft(throwingStorage, [])).not.toThrow();
+    expect(() => clearDraft(throwingStorage)).not.toThrow();
+    expect(() => loadDraft(throwingStorage)).not.toThrow();
+    expect(loadDraft(throwingStorage)).toEqual([]);
   });
 });
