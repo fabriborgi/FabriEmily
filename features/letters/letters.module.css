@@ -1,0 +1,90 @@
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.primaryAction, .secondaryAction {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font: var(--font-lead);
+}
+.primaryAction { background: var(--accent); color: var(--accent-fg); }
+.secondaryAction { background: var(--surface); color: var(--fg); border: 1px solid var(--line); }
+
+.month { display: grid; gap: var(--space-3); }
+.monthLabel { font: var(--font-small); color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+.list { display: grid; gap: var(--space-3); }
+
+.card {
+  display: grid;
+  /* Senza questo un figlio di grid non si restringe sotto la sua larghezza
+     naturale, e il contenuto lungo spinge fuori il contenitore. */
+  min-width: 0;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--fg);
+}
+.cardHead { display: flex; align-items: center; gap: var(--space-2); }
+.author { font: var(--font-lead); }
+.date { font: var(--font-small); color: var(--fg-muted); margin-left: auto; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.excerpt {
+  font: var(--font-body);
+  margin: 0;
+  color: var(--fg);
+  /* Una parola lunghissima senza spazi allargherebbe la pagina oltre lo schermo:
+     su 390px il documento arrivava a 1255px di larghezza. */
+  overflow-wrap: anywhere;
+}
+.muted { font: var(--font-small); color: var(--fg-muted); }
+.error { font: var(--font-small); color: var(--danger); }
+
+.detail { display: grid; gap: var(--space-4); }
+.detailBody { font: var(--font-body); white-space: pre-wrap; margin: 0; }
+.detailMeta { font: var(--font-small); color: var(--fg-muted); }
+
+.composer { display: grid; gap: var(--space-3); }
+.textarea {
+  min-height: 40dvh;
+  padding: var(--space-4);
+  font: var(--font-body);
+  font-size: 17px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg);
+  resize: none;
+}
+.send {
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-lead);
+}
+.send:disabled { opacity: 0.45; }
+.counter { font: var(--font-small); color: var(--fg-muted); text-align: right; }
+
+/* Replay del disegno: sta qui e non in draw.module.css perché serve al dettaglio
+   della lettera (Task 16), che non dipende dall'editor (Task 17). */
+.replayWrap { display: grid; gap: var(--space-3); }
+.replayCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.replayButton {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-small);
+}

@@ -1,0 +1,52 @@
+:root {
+  /* Carta e inchiostro caldi. In F6 un tema acquistato ridefinisce questi valori
+     e nient'altro: nessun componente scrive colori propri. */
+  --bg: #faf6f0;
+  --surface: #ffffff;
+  --fg: #1f2933;
+  --fg-muted: #6b7280;
+  --line: #e7ded1;
+  --accent: #c65f52;
+  --accent-fg: #ffffff;
+  --danger: #b3261e;
+
+  /* La carta su cui vivono i disegni. NON e' --surface e i temi di F6 non devono
+     scurirla: i tratti sono salvati come indici di una palette scelta per essere
+     leggibile su fondo chiaro, quindi una tela scura renderebbe invisibile un
+     disegno a inchiostro. Se un giorno servira' un tema scuro anche qui, andra'
+     cambiata la palette dei tratti insieme alla tela, non la tela da sola. */
+  --paper: #ffffff;
+
+  --font-title: 600 26px/1.2 ui-serif, Georgia, serif;
+  --font-lead: 600 17px/1.3 system-ui, -apple-system, sans-serif;
+  --font-body: 400 16px/1.55 system-ui, -apple-system, sans-serif;
+  --font-small: 400 13px/1.4 system-ui, -apple-system, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --tabbar-height: 60px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-body);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Nessun rimbalzo orizzontale su mobile. */
+body { overflow-x: hidden; }
+
+button, a { -webkit-tap-highlight-color: transparent; }

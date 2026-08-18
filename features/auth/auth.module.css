@@ -1,0 +1,39 @@
+.gate {
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--bg);
+}
+.title { font: var(--font-title); color: var(--fg); text-align: center; margin: 0; }
+.choices { display: grid; gap: var(--space-4); }
+.choice {
+  min-height: 88px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-lead);
+}
+.form { display: grid; gap: var(--space-3); }
+.label { font: var(--font-small); color: var(--fg-muted); }
+.input {
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  font-size: 17px; /* sotto i 16px iOS ingrandisce la pagina al focus */
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+}
+.submit {
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-lead);
+}
+.submit:disabled { opacity: 0.5; }
+.error { font: var(--font-small); color: var(--danger); margin: 0; }

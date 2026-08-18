@@ -1,0 +1,20 @@
+.greeting { font: var(--font-title); margin: 0; }
+.unread {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  color: var(--accent-fg);
+  text-decoration: none;
+}
+.unreadHeadline { font: var(--font-lead); }
+.unreadCount { font: var(--font-small); opacity: 0.85; }
+.slot {
+  padding: var(--space-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.slotTitle { font: var(--font-lead); margin: 0 0 var(--space-1); }
+.slotBody { font: var(--font-small); color: var(--fg-muted); margin: 0; }

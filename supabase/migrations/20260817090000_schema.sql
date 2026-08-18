@@ -58,12 +58,46 @@ create table letters (
 create index letters_created_at_desc on letters (created_at desc);
 create index letters_unread on letters (created_at) where read_at is null;
 
--- Il CLI/template locale in uso non espone più automaticamente le tabelle nuove
--- ai ruoli API (vedi "auto_expose_new_tables" in supabase/config.toml, ora false
--- di default): senza queste GRANT esplicite, authenticated e service_role
--- ricevono "permission denied" ancora prima che RLS entri in gioco.
--- service_role bypassa comunque le RLS (rolbypassrls), ma resta soggetto ai
--- privilegi di tabella: gli va concesso l'accesso pieno per operare da backend.
+-- Le prossime due ALTER DEFAULT PRIVILEGES valgono per gli OGGETTI FUTURI (tabelle,
+-- sequence, funzioni create da migrazioni successive), non per quelli esistenti:
+-- cambiano l'ACL con cui un oggetto nasce, non quella di ciò che è già stato
+-- creato. I REVOKE/GRANT più sotto restano necessari in aggiunta, perché
+-- agiscono sugli oggetti che QUESTA migrazione ha appena creato (che esistevano
+-- già quando gli ALTER DEFAULT PRIVILEGES sono stati eseguiti, e quindi non ne
+-- hanno beneficiato). Servono entrambi: uno per il presente, uno per il futuro.
+
+-- Rilievo 1: una funzione security definer creata in schema public nasce con
+-- proacl = NULL, cioè eseguibile da PUBLIC (e quindi da anon) per default. Le
+-- funzioni security definer dei task 3-7 (grant_coins, create_letter,
+-- mark_letter_read, spend_coins) scavalcano RLS e privilegi di tabella per
+-- design: se restano invocabili senza sessione, il confine di sicurezza
+-- dell'app (password condivisa) non esiste più. Verificato creando davvero una
+-- funzione di prova e interrogando has_function_privilege('anon', ...): non
+-- fidarsi del catalogo da solo.
+--
+-- Trappola aggiuntiva, verificata empiricamente su questa istanza (Postgres
+-- 17.6, stack Supabase locale): la forma "IN SCHEMA public" qui sotto per le
+-- FUNZIONI è un secondo falso positivo. Produce una riga in pg_default_acl con
+-- un ACL apparentemente corretto (niente PUBLIC), ma una funzione creata dopo
+-- in schema public ottiene comunque proacl = NULL e resta eseguibile da anon:
+--   alter default privileges in schema public revoke execute on functions from public;
+-- Per le TABELLE e le SEQUENCE (vedi sotto) la forma "IN SCHEMA" funziona come
+-- atteso: solo per le FUNZIONI questa istanza non applica la riga specifica
+-- dello schema. La forma senza "IN SCHEMA" (a livello di intero database)
+-- invece funziona ed è quella che uso qui. Riguarda solo gli oggetti di cui
+-- postgres (il ruolo che esegue le migrazioni) diventa proprietario: le
+-- funzioni di schemi interni Supabase (auth, storage, ...) appartengono ad
+-- altri ruoli e non sono toccate.
+alter default privileges revoke execute on functions from public;
+
+-- Rilievo 2: la REVOKE ALL più sotto è uno snapshot sulle tabelle/sequence che
+-- esistono ORA. pg_default_acl per tabelle e sequence continua a concedere ad
+-- anon/authenticated il pacchetto di default (incluso TRUNCATE, "Dxtm", e USAGE
+-- sulle sequence): una tabella creata da una migrazione futura rinascerebbe con
+-- quegli stessi privilegi, a meno di ripetere la REVOKE ALL a mano ogni volta.
+-- Rendiamo la protezione una regola invece che un'abitudine da ricordare.
+alter default privileges in schema public revoke all on tables    from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
 
 -- Seconda barriera oltre alle RLS: i privilegi di scrittura non esistono affatto.
 -- Deve stare PRIMA delle GRANT sottostanti, così le GRANT restano l'ultima parola.
@@ -73,9 +107,20 @@ create index letters_unread on letters (created_at) where read_at is null;
 -- resterebbero comunque in grado di fare TRUNCATE sulle tabelle (RLS non copre
 -- TRUNCATE) e authenticated/anon potrebbero manipolare le sequence con
 -- setval/nextval. Serve una REVOKE ALL, sia su tabelle sia su sequence.
+-- Nota: questa REVOKE ALL agisce sulle tabelle/sequence GIÀ create sopra in
+-- questa migrazione, non su quelle future (vedi gli ALTER DEFAULT PRIVILEGES
+-- precedenti per quelle). service_role non è toccato: mantiene w (UPDATE) su
+-- coin_ledger_id_seq, privilegio sufficiente per gli insert sul ledger perché
+-- nextval accetta USAGE oppure UPDATE.
 revoke all on all tables    in schema public from anon, authenticated;
 revoke all on all sequences in schema public from anon, authenticated;
 
+-- Il CLI/template locale in uso non espone più automaticamente le tabelle nuove
+-- ai ruoli API (vedi "auto_expose_new_tables" in supabase/config.toml, ora false
+-- di default): senza queste GRANT esplicite, authenticated e service_role
+-- ricevono "permission denied" ancora prima che RLS entri in gioco.
+-- service_role bypassa comunque le RLS (rolbypassrls), ma resta soggetto ai
+-- privilegi di tabella: gli va concesso l'accesso pieno per operare da backend.
 grant select on couple_state, coin_rules, item_prices, coin_ledger, letters to authenticated;
 grant select, insert, update, delete on couple_state, coin_rules, item_prices, coin_ledger, letters to service_role;
 
