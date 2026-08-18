@@ -66,6 +66,43 @@ describe('composer di testo', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it('due tocchi rapidi inviano una sola lettera', async () => {
+    // Il disabled del pulsante dipende da un re-render: fra due tocchi molto
+    // ravvicinati React puo' non averlo ancora eseguito, e nell'app non esiste
+    // modo di cancellare una lettera mandata due volte.
+    render(<NewLetterPage />);
+    type('una lettera che non voglio spedire due volte');
+    const button = screen.getByRole('button', { name: /Send/ });
+    button.click();
+    button.click();
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(sendText).toHaveBeenCalledTimes(1);
+  });
+
+  it('dopo un errore si puo riprovare', async () => {
+    sendText.mockResolvedValueOnce({ data: null, error: 'Something went wrong. Please try again.' });
+    render(<NewLetterPage />);
+    type('un tentativo che fallisce e poi riesce');
+    const button = screen.getByRole('button', { name: /Send/ });
+    button.click();
+    await waitFor(() => expect(screen.getByText(/Something went wrong/)).toBeDefined());
+
+    sendText.mockResolvedValueOnce({ data: { id: 'x' }, error: null });
+    button.click();
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/letters'));
+    expect(sendText).toHaveBeenCalledTimes(2);
+  });
+
+  it('svuota il campo dopo un invio riuscito', async () => {
+    // Tornando indietro col gesto del browser Next puo' riusare questa istanza:
+    // ritrovarsi il testo gia' spedito invita a rimandarlo per sbaglio.
+    render(<NewLetterPage />);
+    type('questa parte davvero');
+    screen.getByRole('button', { name: /Send/ }).click();
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/letters'));
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('');
+  });
+
   it('dice quanto manca per guadagnare le monete', () => {
     render(<NewLetterPage />);
     type('short');
