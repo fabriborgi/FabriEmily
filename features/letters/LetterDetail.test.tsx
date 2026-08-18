@@ -63,6 +63,25 @@ describe('LetterDetail', () => {
     expect(screen.getByText(/Not read yet/)).toBeDefined();
   });
 
+  it('più render della stessa lettera (es. un aggiornamento realtime) la marcano una sola volta', async () => {
+    const { rerender } = render(<LetterDetail letter={letter()} who="fabrizio" />);
+    await waitFor(() => expect(markRead).toHaveBeenCalledTimes(1));
+    // Stesse props, nuovo riferimento: succede quando un aggiornamento realtime
+    // rifà il fetch della stessa lettera.
+    rerender(<LetterDetail letter={letter()} who="fabrizio" />);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(markRead).toHaveBeenCalledTimes(1);
+  });
+
+  it('passando a una lettera diversa, marca anche quella nuova', async () => {
+    const { rerender } = render(<LetterDetail letter={letter({ id: 'abc' })} who="fabrizio" />);
+    await waitFor(() => expect(markRead).toHaveBeenCalledWith('abc', 'fabrizio'));
+
+    rerender(<LetterDetail letter={letter({ id: 'xyz' })} who="fabrizio" />);
+    await waitFor(() => expect(markRead).toHaveBeenCalledWith('xyz', 'fabrizio'));
+    expect(markRead).toHaveBeenCalledTimes(2);
+  });
+
   it('per un disegno offre il replay invece del testo', () => {
     render(
       <LetterDetail
