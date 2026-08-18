@@ -8,6 +8,13 @@
   margin: 0 0 var(--space-3);
 }
 
+.result {
+  text-align: center;
+  font: var(--font-lead);
+  color: var(--fg);
+  margin: 0 0 var(--space-3);
+}
+
 .tally {
   text-align: center;
   font: var(--font-small);

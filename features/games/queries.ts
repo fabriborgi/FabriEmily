@@ -10,13 +10,14 @@ const db = (client?: Client): Client => client ?? getSupabase();
 
 const COLUMNS = 'id, game_type, state, started_by, current_turn, winner, created_at, closed_at';
 
-/** La partita aperta di quel gioco, se esiste. */
+/** La partita più recente di quel gioco, aperta o appena chiusa — resta in vista finché non se ne apre una nuova. */
 export async function fetchActiveMatch(gameType: GameType, client?: Client): Promise<Match | null> {
   const { data, error } = await db(client)
     .from('game_matches')
     .select(COLUMNS)
     .eq('game_type', gameType)
-    .is('closed_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data as Match | null;

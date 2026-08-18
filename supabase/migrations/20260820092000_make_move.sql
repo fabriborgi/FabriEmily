@@ -44,6 +44,14 @@ begin
     raise exception 'not_your_turn';
   end if;
 
+  if p_result is not null and p_result not in ('win', 'draw') then
+    raise exception 'invalid_result';
+  end if;
+
+  if p_result = 'win' and p_winner is null then
+    raise exception 'invalid_result';
+  end if;
+
   update game_matches
      set state        = p_state,
          current_turn = case when p_person = 'fabrizio' then 'emily'::person else 'fabrizio'::person end,

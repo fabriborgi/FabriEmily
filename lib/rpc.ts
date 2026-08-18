@@ -20,6 +20,7 @@ const MESSAGES: Array<[string, string]> = [
   ['match_already_open', "There's already a game waiting for a move."],
   ['not_your_turn', "It's not your turn yet."],
   ['match_already_closed', 'That game already ended. Refreshing…'],
+  ['invalid_result', 'Something went wrong. Please try again.'],
 ];
 
 const GENERIC = 'Something went wrong. Please try again.';

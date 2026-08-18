@@ -59,6 +59,13 @@ describe('make_move', () => {
     expect(result.closed_at).not.toBeNull();
     expect(result.winner).toBe('fabrizio');
     expect(await coins()).toBe(25);
+    const ledger = await sql<{ actor: string; amount: number; reason: string }>(
+      'select actor, amount, reason from coin_ledger order by id',
+    );
+    expect(ledger).toEqual([
+      { actor: 'fabrizio', amount: 20, reason: 'game_win' },
+      { actor: 'emily', amount: 5, reason: 'game_loss' },
+    ]);
   });
 
   it('un risultato "draw" chiude la partita senza vincitore e accredita 10 monete a entrambi', async () => {
@@ -70,6 +77,13 @@ describe('make_move', () => {
     expect(result.closed_at).not.toBeNull();
     expect(result.winner).toBeNull();
     expect(await coins()).toBe(20);
+    const ledger = await sql<{ actor: string; amount: number; reason: string }>(
+      'select actor, amount, reason from coin_ledger order by id',
+    );
+    expect(ledger).toEqual([
+      { actor: 'fabrizio', amount: 10, reason: 'game_draw' },
+      { actor: 'emily', amount: 10, reason: 'game_draw' },
+    ]);
   });
 
   it('un id inesistente è trattato come partita chiusa', async () => {

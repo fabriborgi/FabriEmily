@@ -23,11 +23,11 @@ const openMatch = (over: Partial<Match> & { cells?: Array<string | null> } = {})
   id: 'm1',
   game_type: 'tic_tac_toe',
   state: { cells: over.cells ?? Array(9).fill(null) },
-  started_by: 'fabrizio',
+  started_by: over.started_by ?? 'fabrizio',
   current_turn: over.current_turn ?? 'fabrizio',
-  winner: null,
+  winner: over.winner ?? null,
   created_at: '2026-08-20T10:00:00Z',
-  closed_at: null,
+  closed_at: over.closed_at ?? null,
 });
 
 describe('TicTacToeBoard', () => {
@@ -60,7 +60,7 @@ describe('TicTacToeBoard', () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
     render(<TicTacToeBoard who="fabrizio" />);
     expect(screen.getByText('Your turn')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Cell 1' }).getAttribute('disabled')).toBeNull();
+    expect(screen.getByRole('button', { name: /^Cell 1,/ }).getAttribute('disabled')).toBeNull();
   });
 
   it('partita attiva, non il mio turno: le celle sono disabilitate', () => {
@@ -74,7 +74,7 @@ describe('TicTacToeBoard', () => {
   it('muovendo su una cella vuota nel proprio turno, calcola lo stato e chiama makeMove', async () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
     render(<TicTacToeBoard who="fabrizio" />);
-    screen.getByRole('button', { name: 'Cell 1' }).click();
+    screen.getByRole('button', { name: /^Cell 1,/ }).click();
     await waitFor(() =>
       expect(makeMove).toHaveBeenCalledWith(
         'm1',
@@ -92,7 +92,7 @@ describe('TicTacToeBoard', () => {
       data: openMatch({ cells: ['fabrizio', 'fabrizio', null, 'emily', 'emily', null, null, null, null] }),
     });
     render(<TicTacToeBoard who="fabrizio" />);
-    screen.getByRole('button', { name: 'Cell 3' }).click();
+    screen.getByRole('button', { name: /^Cell 3,/ }).click();
     await waitFor(() =>
       expect(makeMove).toHaveBeenCalledWith(
         'm1',
@@ -104,20 +104,53 @@ describe('TicTacToeBoard', () => {
     );
   });
 
-  it('mostra il tally di vittorie/pareggi', () => {
+  it('mostra il tally di vittorie/pareggi con i nomi', () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: null });
     useGameHistory.mockReturnValue({ ...baseHistory, data: { fabrizio: 3, emily: 2, draws: 1 } });
     render(<TicTacToeBoard who="fabrizio" />);
-    expect(screen.getByText('3 – 2 – 1 draws')).toBeDefined();
+    expect(screen.getByText('Fabrizio 3 – Emily 2 – 1 draws')).toBeDefined();
   });
 
   it('due tocchi rapidi sulla stessa cella inviano una sola mossa', async () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
     render(<TicTacToeBoard who="fabrizio" />);
-    const cell = screen.getByRole('button', { name: 'Cell 1' });
+    const cell = screen.getByRole('button', { name: /^Cell 1,/ });
     cell.click();
     cell.click();
     await waitFor(() => expect(makeMove).toHaveBeenCalled());
     expect(makeMove).toHaveBeenCalledTimes(1);
+  });
+
+  it('partita appena chiusa con vittoria di chi guarda: mostra "You won!" e "New game"', () => {
+    useActiveMatch.mockReturnValue({
+      ...baseState,
+      data: openMatch({ closed_at: '2026-08-20T10:05:00Z', winner: 'fabrizio' }),
+    });
+    render(<TicTacToeBoard who="fabrizio" />);
+    expect(screen.getByText('You won!')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
+    expect(screen.queryAllByRole('button', { name: /^Cell \d/ })).toHaveLength(0);
+  });
+
+  it('partita appena chiusa con vittoria dell\'altro: mostra "Emily won." e "New game"', () => {
+    useActiveMatch.mockReturnValue({
+      ...baseState,
+      data: openMatch({ closed_at: '2026-08-20T10:05:00Z', winner: 'emily' }),
+    });
+    render(<TicTacToeBoard who="fabrizio" />);
+    expect(screen.getByText('Emily won.')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
+    expect(screen.queryAllByRole('button', { name: /^Cell \d/ })).toHaveLength(0);
+  });
+
+  it('partita appena chiusa in pareggio: mostra "It\'s a draw." e "New game"', () => {
+    useActiveMatch.mockReturnValue({
+      ...baseState,
+      data: openMatch({ closed_at: '2026-08-20T10:05:00Z', winner: null }),
+    });
+    render(<TicTacToeBoard who="fabrizio" />);
+    expect(screen.getByText("It's a draw.")).toBeDefined();
+    expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
+    expect(screen.queryAllByRole('button', { name: /^Cell \d/ })).toHaveLength(0);
   });
 });

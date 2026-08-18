@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { Person } from '@/features/auth/identity';
+import { displayName, type Person } from '@/features/auth/identity';
 import { useActiveMatch } from '../useActiveMatch';
 import { useGameHistory } from '../useGameHistory';
 import { createMatch, makeMove } from '../queries';
@@ -10,7 +10,7 @@ import { EMPTY_BOARD, isLegalMove, applyMove, winnerOf, isDraw, type BoardState 
 import styles from '../games.module.css';
 
 export function TicTacToeBoard({ who }: { who: Person }) {
-  const { data: match, loading, error: loadError } = useActiveMatch('tic_tac_toe');
+  const { data: match, loading, error: loadError, refetch } = useActiveMatch('tic_tac_toe');
   const { data: tally } = useGameHistory('tic_tac_toe');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,16 +42,25 @@ export function TicTacToeBoard({ who }: { who: Person }) {
     const { error: failure } = await makeMove(match.id, who, next, result, winner);
     setBusy(false);
     sending.current = false;
-    if (failure) setError(failure);
+    if (failure) {
+      setError(failure);
+      refetch();
+    }
   }
 
   if (loading && !match) return <p className={styles.muted}>Loading…</p>;
+
+  const newGameButton = (
+    <button type="button" className={styles.newGame} onClick={start} disabled={busy}>
+      {busy ? 'Starting…' : 'New game'}
+    </button>
+  );
 
   return (
     <div className={styles.gameShell}>
       {tally && (
         <p className={styles.tally}>
-          {tally.fabrizio} – {tally.emily} – {tally.draws} draws
+          {displayName('fabrizio')} {tally.fabrizio} – {displayName('emily')} {tally.emily} – {tally.draws} draws
         </p>
       )}
       {loadError && (
@@ -60,13 +69,9 @@ export function TicTacToeBoard({ who }: { who: Person }) {
         </p>
       )}
 
-      {!match && (
-        <button type="button" className={styles.newGame} onClick={start} disabled={busy}>
-          {busy ? 'Starting…' : 'New game'}
-        </button>
-      )}
+      {!match && newGameButton}
 
-      {match && (
+      {match && match.closed_at === null && (
         <>
           <MatchStatus currentTurn={match.current_turn} who={who} />
           <div className={styles.board}>
@@ -75,7 +80,7 @@ export function TicTacToeBoard({ who }: { who: Person }) {
                 key={i}
                 type="button"
                 className={styles.cell}
-                aria-label={`Cell ${i + 1}`}
+                aria-label={`Cell ${i + 1}${cell ? `, ${cell === match.started_by ? 'X' : 'O'}` : ', empty'}`}
                 onClick={() => play(i)}
                 disabled={busy || match.current_turn !== who || cell !== null}
               >
@@ -83,6 +88,19 @@ export function TicTacToeBoard({ who }: { who: Person }) {
               </button>
             ))}
           </div>
+        </>
+      )}
+
+      {match && match.closed_at !== null && (
+        <>
+          <p className={styles.result}>
+            {match.winner === null
+              ? "It's a draw."
+              : match.winner === who
+                ? 'You won!'
+                : `${displayName(match.winner)} won.`}
+          </p>
+          {newGameButton}
         </>
       )}
 
