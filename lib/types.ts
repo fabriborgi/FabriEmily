@@ -154,6 +154,29 @@ export type Database = {
         }
         Relationships: []
       }
+      owned_items: {
+        Row: {
+          key: string
+          purchased_at: string
+        }
+        Insert: {
+          key: string
+          purchased_at?: string
+        }
+        Update: {
+          key?: string
+          purchased_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owned_items_key_fkey"
+            columns: ["key"]
+            isOneToOne: true
+            referencedRelation: "item_prices"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       question_answers: {
         Row: {
           answered_at: string
@@ -321,6 +344,14 @@ export type Database = {
         Args: { p_id: string; p_reader: Database["public"]["Enums"]["person"] }
         Returns: undefined
       }
+      purchase_item: {
+        Args: {
+          p_actor: Database["public"]["Enums"]["person"]
+          p_item_key: string
+        }
+        Returns: undefined
+      }
+      select_theme: { Args: { p_theme_key: string }; Returns: undefined }
       skip_question: {
         Args: {
           p_person: Database["public"]["Enums"]["person"]

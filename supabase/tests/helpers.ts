@@ -53,15 +53,15 @@ export function anonClient(): SupabaseClient<Database> {
   });
 }
 
-/** Riporta i dati allo stato iniziale fra i test. Non toccare coin_rules né questions. */
+/** Riporta i dati allo stato iniziale fra i test. Non toccare coin_rules né questions né item_prices. */
 export async function resetData(): Promise<void> {
   await sql(`
     delete from question_answers;
     delete from question_rounds;
+    delete from owned_items;
     truncate coin_ledger restart identity;
     delete from letters;
-    delete from item_prices;
-    update couple_state set coins = 0 where id = 1;
+    update couple_state set coins = 0, theme = 'default' where id = 1;
   `);
 }
 
@@ -84,4 +84,19 @@ export async function cleanupQuestions(ids: string[]): Promise<void> {
   );
   await sql(`delete from question_rounds where question_id = any($1::uuid[])`, [ids]);
   await sql(`delete from questions where id = any($1::uuid[])`, [ids]);
+}
+
+/**
+ * Rimuove chirurgicamente delle righe di fixture da item_prices, insieme a
+ * ciò che le referenzia (owned_items). Mai un "delete from item_prices"
+ * indiscriminato: dal Task 4 in poi la tabella contiene anche i 4 temi
+ * reali, seminati una volta per sempre — stesso principio già applicato a
+ * `questions` in F5 con cleanupQuestions. Va invocato dall'afterEach dei
+ * file che inseriscono chiavi di prova, passando esattamente le chiavi che
+ * hanno creato.
+ */
+export async function cleanupItems(keys: string[]): Promise<void> {
+  if (keys.length === 0) return;
+  await sql(`delete from owned_items where key = any($1::text[])`, [keys]);
+  await sql(`delete from item_prices where key = any($1::text[])`, [keys]);
 }

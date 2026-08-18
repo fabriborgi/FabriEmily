@@ -15,6 +15,8 @@ const MESSAGES: Array<[string, string]> = [
   ['round_already_closed', 'That question was already resolved. Refreshing…'],
   ['already_answered', "You've already answered this one."],
   ['no_questions_available', "There are no questions in that category yet."],
+  ['already_owned', 'You already own that.'],
+  ['theme_not_owned', "You don't own that theme yet."],
 ];
 
 const GENERIC = 'Something went wrong. Please try again.';

@@ -5,6 +5,7 @@ import { displayName } from '@/features/auth/identity';
 import { useCoins } from '@/features/coins/useCoins';
 import { CoinPill } from '@/components/ui/CoinPill';
 import { TabBar } from '@/components/TabBar';
+import { ThemeApplier } from '@/components/ThemeApplier';
 import styles from '@/app/shell.module.css';
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
@@ -13,6 +14,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.app}>
+      <ThemeApplier />
       <header className={styles.header}>
         <button
           className={styles.whoButton}
