@@ -141,6 +141,70 @@ describe('useRealtimeQuery', () => {
     await waitFor(() => expect(result.current.offline).toBe(false));
   });
 
+  it('non lascia che una risposta lenta sovrascriva dati più recenti già arrivati (fuori ordine)', async () => {
+    const f = fakeClient();
+    let resolveSlow: (value: string[]) => void = () => {};
+    const slow = new Promise<string[]>((resolve) => {
+      resolveSlow = resolve;
+    });
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(['iniziale']) // fetch al montaggio
+      .mockResolvedValueOnce(['iniziale']) // ri-scarico su SUBSCRIBED
+      .mockImplementationOnce(() => slow) // caricamento lento innescato dal test, resta in sospeso
+      .mockResolvedValueOnce(['veloce']); // caricamento veloce innescato subito dopo
+    const { result } = renderHook(() =>
+      useRealtimeQuery({ tables: ['letters'], fetcher, client: f.client as never }),
+    );
+    await waitFor(() => expect(result.current.data).toEqual(['iniziale']));
+
+    // Parte il caricamento lento (terza chiamata) e, subito dopo, quello veloce
+    // (quarta chiamata): il veloce risolve per primo.
+    await act(async () => {
+      result.current.refetch();
+    });
+    await act(async () => {
+      result.current.refetch();
+    });
+    await waitFor(() => expect(result.current.data).toEqual(['veloce']));
+
+    // Solo ora arriva la risposta del caricamento lento, partito per primo ma
+    // più tardivo: non deve sovrascrivere i dati più recenti già mostrati.
+    await act(async () => {
+      resolveSlow(['lento']);
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(result.current.data).toEqual(['veloce']);
+  });
+
+  it('revoca lo stato offline al ritorno online anche se il ri-scarico fallisce', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    const f = fakeClient();
+    // Tutti i caricamenti falliscono, compreso quello innescato da 'online':
+    // il ramo di successo di load() (che azzererebbe offline come effetto
+    // collaterale) non entra mai in gioco, così il test dipende solo dalla
+    // riga esplicita nel gestore dell'evento 'online'.
+    const fetcher = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed to fetch')) // fetch al montaggio (offline)
+      .mockRejectedValueOnce(new Error('Failed to fetch')) // ri-scarico su SUBSCRIBED (offline)
+      .mockRejectedValueOnce(new Error('Failed to fetch')); // ri-scarico su 'online': la rete torna ma resta instabile
+    const { result } = renderHook(() =>
+      useRealtimeQuery({ tables: ['letters'], fetcher, client: f.client as never }),
+    );
+    await waitFor(() => expect(result.current.offline).toBe(true));
+
+    await act(async () => {
+      vi.stubGlobal('navigator', { onLine: true });
+      window.dispatchEvent(new Event('online'));
+    });
+
+    // Anche se il ri-scarico fallisce, la connessione è tornata: la striscia
+    // "offline" non deve restare bloccata (l'errore resta comunque esposto).
+    await waitFor(() => expect(result.current.offline).toBe(false));
+    expect(result.current.error).not.toBeNull();
+  });
+
   it('rimuove il canale allo smontaggio', async () => {
     const f = fakeClient();
     const { unmount } = renderHook(() =>

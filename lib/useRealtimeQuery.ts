@@ -39,18 +39,30 @@ export function useRealtimeQuery<T>({ tables, fetcher, client }: Options<T>): Re
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
+  // Guardiano di sequenza: al montaggio partono due caricamenti quasi in
+  // contemporanea (fetch diretto + ri-scarico su SUBSCRIBED), con latenze
+  // potenzialmente diverse. Senza un numero di esecuzione, la risposta più
+  // lenta può arrivare per ultima e sovrascrivere dati più freschi già
+  // mostrati. Ogni load() prende un numero progressivo e, prima di scrivere
+  // qualunque stato, verifica di essere ancora l'esecuzione più recente: se
+  // nel frattempo ne è partita un'altra, esce senza toccare nulla.
+  const runIdRef = useRef(0);
+
   const load = useCallback(async () => {
+    const runId = ++runIdRef.current;
     try {
       const next = await fetcherRef.current();
+      if (runId !== runIdRef.current) return;
       setData(next);
       setError(null);
       setOffline(false);
     } catch (thrown) {
+      if (runId !== runIdRef.current) return;
       // I dati precedenti restano visibili: meglio qualcosa di vecchio che una schermata vuota.
       setError(toUserMessage({ message: thrown instanceof Error ? thrown.message : '' }));
       if (typeof navigator !== 'undefined' && !navigator.onLine) setOffline(true);
     } finally {
-      setLoading(false);
+      if (runId === runIdRef.current) setLoading(false);
     }
   }, []);
 
