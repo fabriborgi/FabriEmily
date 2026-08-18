@@ -30,7 +30,11 @@ export default function LettersPage() {
 
       {loading && letters.length === 0 && <p className={styles.muted}>Opening the archive…</p>}
 
-      {!loading && letters.length === 0 && (
+      {/* Senza il controllo sull'errore, un primo caricamento fallito mostrava
+          insieme il banner rosso e "Nothing here yet": due messaggi che si
+          contraddicono, e il secondo fa credere che l'archivio sia vuoto quando
+          semplicemente non e' stato possibile leggerlo. */}
+      {!loading && !error && letters.length === 0 && (
         <EmptyState
           title="Nothing here yet"
           body="Write the first letter, or draw something silly."

@@ -10,6 +10,13 @@
   --accent-fg: #ffffff;
   --danger: #b3261e;
 
+  /* La carta su cui vivono i disegni. NON e' --surface e i temi di F6 non devono
+     scurirla: i tratti sono salvati come indici di una palette scelta per essere
+     leggibile su fondo chiaro, quindi una tela scura renderebbe invisibile un
+     disegno a inchiostro. Se un giorno servira' un tema scuro anche qui, andra'
+     cambiata la palette dei tratti insieme alla tela, non la tela da sola. */
+  --paper: #ffffff;
+
   --font-title: 600 26px/1.2 ui-serif, Georgia, serif;
   --font-lead: 600 17px/1.3 system-ui, -apple-system, sans-serif;
   --font-body: 400 16px/1.55 system-ui, -apple-system, sans-serif;

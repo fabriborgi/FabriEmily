@@ -34,7 +34,7 @@ export function DrawingThumbnail({
       ref={ref}
       role="img"
       aria-label={label}
-      style={{ width: size, height: size, borderRadius: 'var(--radius-md)', background: '#fff' }}
+      style={{ width: size, height: size, borderRadius: 'var(--radius-md)', background: 'var(--paper)' }}
     />
   );
 }
