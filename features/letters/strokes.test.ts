@@ -112,6 +112,9 @@ describe('isStrokeArray', () => {
     ['coordinata non numerica', [{ c: 0, w: 0, p: [1, 'x'] }]],
     ['campo mancante', [{ c: 0, p: [1, 2] }]],
     ['troppi tratti', Array.from({ length: MAX_STROKES + 1 }, () => valid[0])],
+    // Il database esige esattamente {c, w, p}: se il client fosse piu' permissivo,
+    // il disegno verrebbe respinto solo all'invio.
+    ['chiave extra nel tratto', [{ c: 0, w: 0, p: [1, 2], junk: 'x' }]],
     // Il database (assert_valid_strokes, Task 5) rifiuta anche le coordinate
     // frazionarie: p è uno spazio logico a coordinate intere, e accettare qui
     // ciò che il database rifiuta manderebbe un errore incomprensibile a chi
@@ -181,6 +184,25 @@ describe('drawStrokes', () => {
     const { ctx, calls } = fakeCtx();
     drawStrokes(ctx, [{ c: 0, w: 0, p: [0, 0, 100, 0, 200, 100] }], 1000);
     expect(calls.some((c) => c.startsWith('quadraticCurveTo'))).toBe(true);
+  });
+
+  it('mette il punto di controllo sul vertice e il punto finale a metà strada', () => {
+    // Verificare i valori e non solo che la curva sia stata disegnata: sbagliando
+    // il calcolo del punto medio il tratto esce visibilmente storto, e un test che
+    // guarda solo il nome della chiamata resta verde.
+    const { ctx, calls } = fakeCtx();
+    drawStrokes(ctx, [{ c: 0, w: 0, p: [0, 0, 100, 0, 200, 100] }], 1000);
+    expect(calls).toContain('quadraticCurveTo(100,0,150,50)');
+    expect(calls).toContain('lineTo(200,100)');
+  });
+
+  it('disegna un tratto di un solo punto senza rompersi', () => {
+    // Un tocco secco senza trascinamento produce p di lunghezza 2: con lineCap
+    // arrotondato deve risultare un punto, non un errore.
+    const { ctx, calls } = fakeCtx();
+    expect(() => drawStrokes(ctx, [{ c: 0, w: 1, p: [500, 500] }], 1000)).not.toThrow();
+    expect(calls).toContain('moveTo(500,500)');
+    expect(calls).toContain('stroke()');
   });
 
   it('disegna solo i primi N tratti quando richiesto — è la base del replay', () => {

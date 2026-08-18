@@ -73,6 +73,10 @@ export function isStrokeArray(value: unknown): value is Stroke[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > MAX_STROKES) return false;
   return value.every((stroke) => {
     if (typeof stroke !== 'object' || stroke === null) return false;
+    // Esattamente tre chiavi: assert_valid_strokes nel database rifiuta i tratti
+    // con campi extra, e il client deve rifiutare le stesse cose, altrimenti si
+    // disegna per dieci minuti e l'errore arriva solo al momento dell'invio.
+    if (Object.keys(stroke).length !== 3) return false;
     const { c, w, p } = stroke as Partial<Stroke>;
     if (!Number.isInteger(c) || c! < 0 || c! >= PALETTE.length) return false;
     if (!Number.isInteger(w) || w! < 0 || w! >= WIDTHS.length) return false;
