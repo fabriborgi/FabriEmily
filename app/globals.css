@@ -50,3 +50,47 @@ html, body {
 body { overflow-x: hidden; }
 
 button, a { -webkit-tap-highlight-color: transparent; }
+
+/* F6 — Shop: ogni tema acquistato ridefinisce solo queste variabili, mai
+   --paper (la tela dei disegni resta sempre leggibile ai tratti salvati con
+   una palette pensata per fondo chiaro) né --danger (il rosso d'errore resta
+   un segnale costante, indipendente dal tema). */
+[data-theme='theme_night'] {
+  --bg: #1a1d24;
+  --surface: #242832;
+  --fg: #e8e6e1;
+  --fg-muted: #9ca3af;
+  --line: #363c48;
+  --accent: #e0a458;
+  --accent-fg: #1a1d24;
+}
+
+[data-theme='theme_ocean'] {
+  --bg: #eef5f6;
+  --surface: #ffffff;
+  --fg: #17323a;
+  --fg-muted: #5b7b82;
+  --line: #cfe3e6;
+  --accent: #1f8a94;
+  --accent-fg: #ffffff;
+}
+
+[data-theme='theme_sunset'] {
+  --bg: #fdf0f5;
+  --surface: #ffffff;
+  --fg: #3a1f2c;
+  --fg-muted: #8a6a76;
+  --line: #f2d9e2;
+  --accent: #d1487a;
+  --accent-fg: #ffffff;
+}
+
+[data-theme='theme_forest'] {
+  --bg: #f1f5ee;
+  --surface: #ffffff;
+  --fg: #1f2e1a;
+  --fg-muted: #647a5c;
+  --line: #d9e5cf;
+  --accent: #4c7a3d;
+  --accent-fg: #ffffff;
+}

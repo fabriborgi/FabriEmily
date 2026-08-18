@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase/client';
 import { toUserMessage } from '@/lib/rpc';
@@ -48,6 +48,18 @@ export function useRealtimeQuery<T>({ tables, fetcher, client }: Options<T>): Re
   // nel frattempo ne è partita un'altra, esce senza toccare nulla.
   const runIdRef = useRef(0);
 
+  // Ogni istanza dell'hook ha il proprio canale, anche se osserva le stesse
+  // tabelle di un'altra istanza altrove nell'albero: Supabase riusa lo stesso
+  // oggetto canale per topic identici, e una seconda chiamata a .on() su un
+  // canale già in fase di join/joined lancia un'eccezione. Scoperto quando
+  // useActiveTheme (F6) e useCoins hanno iniziato a osservare entrambi
+  // couple_state nello stesso albero di componenti (AppChrome), facendo
+  // crashare l'intera app. useId() è stabile per il ciclo di vita del
+  // componente e univoco per istanza, esattamente ciò che serve qui — non è
+  // un problema di correttezza dei dati (nessuno stato condiviso fra istanze),
+  // solo di identità del canale lato client.
+  const instanceId = useId();
+
   const load = useCallback(async () => {
     const runId = ++runIdRef.current;
     try {
@@ -73,7 +85,7 @@ export function useRealtimeQuery<T>({ tables, fetcher, client }: Options<T>): Re
     void load();
     setOffline(typeof navigator !== 'undefined' && !navigator.onLine);
 
-    let channel = supabase.channel(`rt:${key}`);
+    let channel = supabase.channel(`rt:${key}:${instanceId}`);
     for (const table of key.split(',')) {
       channel = channel.on(
         'postgres_changes',
