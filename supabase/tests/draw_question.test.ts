@@ -136,9 +136,12 @@ describe('draw_question', () => {
     await clientA.from('questions').select('id').limit(1);
     await clientB.from('questions').select('id').limit(1);
 
+    // p_category è un parametro opzionale con default nel database (i tipi
+    // generati lo tipano come `?`, non nullable): si passa `undefined`, non
+    // `null`, per chiedere "qualunque categoria".
     const [a, b] = await Promise.all([
-      clientA.rpc('draw_question', { p_person: 'fabrizio', p_category: null }),
-      clientB.rpc('draw_question', { p_person: 'emily', p_category: null }),
+      clientA.rpc('draw_question', { p_person: 'fabrizio', p_category: undefined }),
+      clientB.rpc('draw_question', { p_person: 'emily', p_category: undefined }),
     ]);
     const errors = [a.error, b.error].filter(Boolean);
     expect(errors).toHaveLength(1);
