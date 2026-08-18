@@ -81,3 +81,21 @@
   justify-content: space-between;
 }
 .soon { font: var(--font-small); }
+
+.connectFourBoard {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+  max-width: 350px;
+  margin: 0 auto;
+}
+.connectFourCell {
+  aspect-ratio: 1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-title);
+}
+.connectFourCell:disabled { opacity: 1; }
