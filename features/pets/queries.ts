@@ -7,7 +7,7 @@ import type { Pet } from './care';
 import type { PetKind } from './species';
 
 export type PetsState = {
-  /** item_prices per le chiavi pet_*/plant_*: costo di sblocco. */
+  /** item_prices per le chiavi pet_ / plant_: costo di sblocco. */
   prices: Record<string, number>;
   /** Specie sbloccate dalla coppia, con statistiche e nickname correnti. */
   pets: Pet[];
