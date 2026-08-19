@@ -3,6 +3,7 @@
 import { useIdentity } from '@/features/auth/IdentityProvider';
 import { useLetters } from '@/features/letters/useLetters';
 import { UnreadCard } from '@/features/home/UnreadCard';
+import { AnimalsCard } from '@/features/home/AnimalsCard';
 import { OfflineStrip } from '@/components/ui/OfflineStrip';
 import { displayName } from '@/features/auth/identity';
 import styles from '@/features/home/home.module.css';
@@ -18,11 +19,9 @@ export default function HomePage() {
 
       <UnreadCard letters={data ?? []} who={who} />
 
-      {/* Segnaposto: F2 e F4 riempiono uno spazio già impaginato invece di ridisegnare la Home. */}
-      <div className={styles.slot}>
-        <p className={styles.slotTitle}>Your animals</p>
-        <p className={styles.slotBody}>Coming soon — they&rsquo;ll ask for food right here.</p>
-      </div>
+      <AnimalsCard />
+
+      {/* Segnaposto: un gioco attivo con l'altra persona finisce qui. */}
       <div className={styles.slot}>
         <p className={styles.slotTitle}>Games in progress</p>
         <p className={styles.slotBody}>
