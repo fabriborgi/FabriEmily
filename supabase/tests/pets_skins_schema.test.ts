@@ -2,17 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { sql } from './helpers';
 
 describe('schema delle skin', () => {
-  it('semina esattamente 8 skin in item_prices', async () => {
-    const rows = await sql<{ count: string }>(
-      `select count(*) from item_prices where key like 'skin_%'`,
+  it('semina esattamente le 8 skin attese, a 50 monete ciascuna', async () => {
+    const rows = await sql<{ key: string; cost: number }>(
+      `select key, cost from item_prices where key like 'skin_%' order by key`,
     );
-    expect(Number(rows[0].count)).toBe(8);
+    expect(rows).toEqual([
+      { key: 'skin_charcoal', cost: 50 },
+      { key: 'skin_forest', cost: 50 },
+      { key: 'skin_gold', cost: 50 },
+      { key: 'skin_mint', cost: 50 },
+      { key: 'skin_ocean', cost: 50 },
+      { key: 'skin_rose', cost: 50 },
+      { key: 'skin_sunset', cost: 50 },
+      { key: 'skin_violet', cost: 50 },
+    ]);
   });
 
-  it('applica il costo uniforme di 50 monete', async () => {
-    const rows = await sql<{ cost: number }>(`select cost from item_prices where key like 'skin_%'`);
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows.every((r) => r.cost === 50)).toBe(true);
+  it('ogni skin ha un\'etichetta non vuota', async () => {
+    const rows = await sql(
+      `select 1 from item_prices where key like 'skin_%' and trim(label) = ''`,
+    );
+    expect(rows).toHaveLength(0);
   });
 
   it('pets ha la colonna active_skin, nullable', async () => {

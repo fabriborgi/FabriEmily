@@ -72,6 +72,18 @@ export async function renamePet(speciesKey: string, name: string, client?: Clien
   return call(db(client).rpc('rename_pet', { p_species_key: speciesKey, p_name: name }));
 }
 
+/**
+ * `skinKey: null` è un valore legittimo, non un placeholder — riporta
+ * l'animale al colore naturale (vedi select_pet_skin, che tratta
+ * `p_skin_key is not null` come un ramo vero e proprio, non un caso
+ * d'errore). `npx supabase gen types` non deduce questa nullability da un
+ * parametro `text` semplice: `lib/types.ts` va corretto a mano ogni volta
+ * che `npm run db:types` lo rigenera (Args.p_skin_key torna a `string`,
+ * questa chiamata smette di compilare — sintomo chiaro, non un bug
+ * silenzioso). Il fix è sempre lo stesso: `p_skin_key: string` →
+ * `p_skin_key: string | null` nella entry `select_pet_skin` di
+ * `Database.public.Functions`.
+ */
 export async function selectPetSkin(speciesKey: string, skinKey: string | null, client?: Client) {
   return call(
     db(client).rpc('select_pet_skin', { p_species_key: speciesKey, p_skin_key: skinKey }),
