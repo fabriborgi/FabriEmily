@@ -48,12 +48,20 @@ function resolveSquare(position: number): MoveResult {
  * poi risolve un'eventuale catena di oche (ogni oca ripete lo stesso
  * tiro, con lo stesso rimbalzo a ogni passo), infine applica l'effetto
  * della casella non-oca su cui la catena si ferma.
+ *
+ * Il rimbalzo può riportare la catena esattamente sulla stessa oca da cui
+ * è partita (es. dalla casella 59 con somma 8: 59+8=67, rimbalza a 59) —
+ * senza un limite il ciclo non terminerebbe mai. `visited` rompe il ciclo:
+ * se una casella si ripresenta, la catena si ferma lì (si resta su
+ * quell'oca per questo turno, invece di rilanciare all'infinito).
  */
 export function applyRoll(current: number, dice: [number, number]): MoveResult {
   const total = dice[0] + dice[1];
   let position = bounce(current + total);
 
-  while (GEESE.includes(position)) {
+  const visited = new Set<number>();
+  while (GEESE.includes(position) && !visited.has(position)) {
+    visited.add(position);
     position = bounce(position + total);
   }
 

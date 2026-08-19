@@ -23,6 +23,23 @@ describe('applyRoll', () => {
     expect(applyRoll(1, [2, 2])).toEqual({ position: 13, stuckTurns: 0 });
   });
 
+  it('una catena che rimbalza a metà può terminare su una casella speciale non-oca', () => {
+    // 41 (oca) + somma 9 = 50 (oca) → +9 = 59 (oca) → +9 = 68, rimbalza a 58 (morte)
+    // 58 non è un'oca: la catena si ferma lì e si applica l'effetto morte.
+    expect(applyRoll(41, [4, 5])).toEqual({ position: 0, stuckTurns: 0 });
+  });
+
+  it("una catena può arrivare esatta alla casella 63 e vincere", () => {
+    // 45 (oca) + somma 9 = 54 (oca) → +9 = 63, arrivo esatto: non è un'oca, la catena si ferma qui.
+    expect(applyRoll(45, [4, 5])).toEqual({ position: 63, stuckTurns: 0 });
+  });
+
+  it('una catena che rimbalzerebbe esattamente sulla stessa oca si ferma lì invece di ciclare all\'infinito', () => {
+    // 51 + somma 8 = 59 (oca) → rimbalzo di 59+8=67 torna esattamente a 59:
+    // senza un limite sulle caselle già visitate, questo tiro non terminerebbe mai.
+    expect(applyRoll(51, [2, 6])).toEqual({ position: 59, stuckTurns: 0 });
+  });
+
   it('il ponte porta alla casella 12', () => {
     expect(applyRoll(1, [2, 3])).toEqual({ position: BRIDGE_TARGET, stuckTurns: 0 }); // 1+5=6=ponte
   });
