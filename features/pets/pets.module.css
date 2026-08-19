@@ -1,0 +1,26 @@
+.card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+.card.needy { border-color: var(--danger); }
+.image, .imageLocked { width: 64px; height: 64px; object-fit: contain; }
+.imageLocked { opacity: 0.5; }
+.name { font: var(--font-lead); margin: 0; }
+.action {
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-body);
+}
+.action:disabled { opacity: 0.6; }
+.error { font: var(--font-small); color: var(--danger); margin: 0; }
+.needyBadge { font: var(--font-small); color: var(--danger); }
+.muted { color: var(--fg-muted); }
