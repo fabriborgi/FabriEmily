@@ -355,6 +355,27 @@ export type Database = {
         }
       }
       assert_valid_strokes: { Args: { p_strokes: Json }; Returns: undefined }
+      care_for_pet: {
+        Args: {
+          p_actor: Database["public"]["Enums"]["person"]
+          p_species_key: string
+          p_stats: Json
+        }
+        Returns: {
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname: string | null
+          species_key: string
+          stats: Json
+          unlocked_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_letter: {
         Args: {
           p_author: Database["public"]["Enums"]["person"]
@@ -467,6 +488,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      rename_pet: {
+        Args: { p_name: string; p_species_key: string }
+        Returns: {
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname: string | null
+          species_key: string
+          stats: Json
+          unlocked_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       select_theme: { Args: { p_theme_key: string }; Returns: undefined }
       skip_question: {
         Args: {
@@ -481,6 +519,28 @@ export type Database = {
           p_item_key: string
         }
         Returns: number
+      }
+      unlock_pet: {
+        Args: {
+          p_actor: Database["public"]["Enums"]["person"]
+          p_initial_stats: Json
+          p_kind: Database["public"]["Enums"]["pet_kind"]
+          p_species_key: string
+        }
+        Returns: {
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname: string | null
+          species_key: string
+          stats: Json
+          unlocked_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
