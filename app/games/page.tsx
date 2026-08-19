@@ -5,7 +5,7 @@ const GAMES = [
   { slug: 'tic-tac-toe', label: 'Tic-tac-toe', available: true },
   { slug: 'connect-four', label: 'Connect 4', available: true },
   { slug: 'blackjack', label: 'Blackjack', available: false },
-  { slug: 'trivia', label: 'Trivia', available: false },
+  { slug: 'trivia', label: 'Trivia', available: true },
 ];
 
 export default function GamesPage() {

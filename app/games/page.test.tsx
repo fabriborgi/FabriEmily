@@ -15,12 +15,16 @@ describe('GamesPage', () => {
     expect(link.getAttribute('href')).toBe('/games/connect-four');
   });
 
-  it('mostra i giochi non ancora pronti come "coming soon", senza link', () => {
+  it('Trivia è ora un link giocabile', () => {
+    render(<GamesPage />);
+    const link = screen.getByRole('link', { name: /Trivia/ });
+    expect(link.getAttribute('href')).toBe('/games/trivia');
+  });
+
+  it('mostra Blackjack come "coming soon", senza link', () => {
     render(<GamesPage />);
     expect(screen.getByText('Blackjack')).toBeDefined();
-    expect(screen.getByText('Trivia')).toBeDefined();
     expect(screen.queryByRole('link', { name: /Blackjack/ })).toBeNull();
-    expect(screen.queryByRole('link', { name: /Trivia/ })).toBeNull();
-    expect(screen.getAllByText('Coming soon')).toHaveLength(2);
+    expect(screen.getAllByText('Coming soon')).toHaveLength(1);
   });
 });
