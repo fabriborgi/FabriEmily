@@ -116,3 +116,76 @@ export function applyMove(state: BoardState, person: Person, to: Position): Boar
 export function isWin(position: Position, targetRow: number): boolean {
   return position.row === targetRow;
 }
+
+/**
+ * Due muri confliggono se: stesso orientamento e le rispettive coppie di
+ * colonne (orizzontali) o righe (verticali) si toccano o si sovrappongono
+ * (|differenza| ≤ 1) — due segmenti da 2 caselle non possono condividere
+ * neanche una singola casella di ancoraggio. Orientamenti diversi
+ * confliggono solo se ancorati esattamente sulla stessa intersezione
+ * (si incrocerebbero fisicamente nello stesso punto).
+ */
+export function wallsConflict(a: Wall, b: Wall): boolean {
+  if (a.orientation === b.orientation) {
+    if (a.orientation === 'horizontal') {
+      return a.row === b.row && Math.abs(a.col - b.col) <= 1;
+    }
+    return a.col === b.col && Math.abs(a.row - b.row) <= 1;
+  }
+  return a.row === b.row && a.col === b.col;
+}
+
+/** Vero se esiste un percorso (ricerca in ampiezza) da `from` a una qualunque casella della riga `targetRow`, rispettando i muri dati. */
+export function hasPath(from: Position, targetRow: number, walls: Wall[]): boolean {
+  const visited = new Set<string>();
+  const queue: Position[] = [from];
+  visited.add(`${from.row},${from.col}`);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (current.row === targetRow) return true;
+
+    for (const next of orthogonalNeighbors(current)) {
+      const key = `${next.row},${next.col}`;
+      if (visited.has(key)) continue;
+      if (walls.some((w) => wallBlocksEdge(w, current, next))) continue;
+      visited.add(key);
+      queue.push(next);
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Un piazzamento è legale se: l'ancora è dentro i limiti (0..SIZE-2), chi
+ * piazza ha ancora muri disponibili, il muro non confligge con nessuno
+ * già presente, e — il controllo principale — con il muro aggiunto
+ * ipoteticamente ENTRAMBI i giocatori mantengono almeno un percorso verso
+ * la propria riga obiettivo.
+ */
+export function isLegalWallPlacement(
+  state: BoardState,
+  wall: Wall,
+  person: Person,
+  startedBy: Person,
+): boolean {
+  if (wall.row < 0 || wall.row > SIZE - 2 || wall.col < 0 || wall.col > SIZE - 2) return false;
+  if (state.wallsRemaining[person] <= 0) return false;
+  if (state.walls.some((w) => wallsConflict(w, wall))) return false;
+
+  const nextWalls = [...state.walls, wall];
+  const other: Person = person === 'fabrizio' ? 'emily' : 'fabrizio';
+  return (
+    hasPath(state.positions[person], goalRow(person, startedBy), nextWalls) &&
+    hasPath(state.positions[other], goalRow(other, startedBy), nextWalls)
+  );
+}
+
+export function applyWall(state: BoardState, person: Person, wall: Wall): BoardState {
+  return {
+    ...state,
+    walls: [...state.walls, wall],
+    wallsRemaining: { ...state.wallsRemaining, [person]: state.wallsRemaining[person] - 1 },
+  };
+}
