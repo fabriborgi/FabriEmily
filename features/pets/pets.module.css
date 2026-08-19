@@ -24,3 +24,36 @@
 .error { font: var(--font-small); color: var(--danger); margin: 0; }
 .needyBadge { font: var(--font-small); color: var(--danger); }
 .muted { color: var(--fg-muted); }
+
+.detail {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.curiosity { font: var(--font-small); color: var(--fg-muted); margin: 0; }
+.renameRow { display: flex; gap: var(--space-2); }
+.nameInput {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  font: var(--font-body);
+}
+.renameAction {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font: var(--font-body);
+}
+.stats { display: grid; gap: var(--space-1); }
+.statRow { display: flex; justify-content: space-between; font: var(--font-body); }
+.statLabel { text-transform: capitalize; color: var(--fg-muted); }
+.actions { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.section { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-4) 0; }
+.sectionTitle { font: var(--font-title); margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); }
