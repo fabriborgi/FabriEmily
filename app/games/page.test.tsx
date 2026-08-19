@@ -27,6 +27,12 @@ describe('GamesPage', () => {
     expect(link.getAttribute('href')).toBe('/games/goose');
   });
 
+  it('Quoridor è ora un link giocabile', () => {
+    render(<GamesPage />);
+    const link = screen.getByRole('link', { name: /Quoridor/ });
+    expect(link.getAttribute('href')).toBe('/games/quoridor');
+  });
+
   it('mostra Blackjack come "coming soon", senza link', () => {
     render(<GamesPage />);
     expect(screen.getByText('Blackjack')).toBeDefined();

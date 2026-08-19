@@ -156,3 +156,55 @@
 }
 .gooseSquareNumber { font-size: 9px; color: var(--fg-muted); position: absolute; top: 2px; left: 2px; }
 .gooseToken { font-size: 14px; }
+.quoridorModeRow { display: flex; gap: var(--space-2); justify-content: center; margin: 0 0 var(--space-2); }
+.quoridorModeButton {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-body);
+}
+.quoridorModeButton:disabled { background: var(--accent); color: var(--accent-fg); opacity: 1; }
+.quoridorBoard {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 1px;
+  max-width: 360px;
+  aspect-ratio: 1;
+  margin: 0 auto var(--space-3);
+}
+.quoridorCell {
+  aspect-ratio: 1;
+  min-height: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-body);
+}
+.quoridorCellLegal { background: var(--accent); color: var(--accent-fg); }
+.quoridorAnchor {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--fg-muted);
+  opacity: 0.5;
+  transform: translate(-50%, -50%);
+}
+.quoridorOrientationRow { display: flex; gap: var(--space-2); justify-content: center; margin: 0 0 var(--space-3); }
+.quoridorOrientationButton {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font: var(--font-body);
+}
+.quoridorOrientationButton:disabled { opacity: 0.45; }
