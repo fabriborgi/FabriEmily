@@ -21,9 +21,23 @@ function shuffled<T>(items: T[]): T[] {
   return copy;
 }
 
+/**
+ * Rimescola le 4 opzioni di una domanda (e sposta correctIndex di
+ * conseguenza) senza mutare l'oggetto originale nel banco statico. Il banco
+ * ha correctIndex sbilanciato verso alcune lettere (es. quasi metà delle
+ * domande con la risposta corretta in posizione B): senza rimescolare, chi
+ * gioca può sfruttare la distribuzione invece di rispondere davvero.
+ */
+function shuffleOptions(question: Question): Question {
+  const order = shuffled([0, 1, 2, 3]);
+  const options = order.map((i) => question.options[i]) as Question['options'];
+  const correctIndex = order.indexOf(question.correctIndex) as Question['correctIndex'];
+  return { ...question, options, correctIndex };
+}
+
 /** Pesca QUESTIONS_PER_MATCH domande casuali senza ripetizioni dal banco statico. */
 export function drawMatch(): MatchState {
-  const questions = shuffled(QUESTIONS).slice(0, QUESTIONS_PER_MATCH);
+  const questions = shuffled(QUESTIONS).slice(0, QUESTIONS_PER_MATCH).map(shuffleOptions);
   return {
     questions,
     answers: Array(QUESTIONS_PER_MATCH).fill(null),

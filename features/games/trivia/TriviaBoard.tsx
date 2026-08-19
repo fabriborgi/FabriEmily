@@ -21,6 +21,11 @@ export function TriviaBoard({ who }: { who: Person }) {
   // basta fra due tocchi molto ravvicinati, né fra un tocco e lo scadere
   // del timer nello stesso istante.
   const sending = useRef(false);
+  // L'intervallo del countdown resta "vivo" (myTurn è ancora true) finché
+  // l'aggiornamento realtime non arriva dopo una risposta inviata: senza
+  // fermarlo esplicitamente qui, allo scadere dei 10s invierebbe una
+  // seconda mossa sulla stessa domanda già risposta.
+  const timerId = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function start() {
     if (sending.current) return;
@@ -37,6 +42,10 @@ export function TriviaBoard({ who }: { who: Person }) {
     if (sending.current || !match) return;
     const state = match.state as MatchState;
     if (match.current_turn !== who) return;
+    if (timerId.current !== null) {
+      clearInterval(timerId.current);
+      timerId.current = null;
+    }
     sending.current = true;
     setBusy(true);
     setError(null);
@@ -71,10 +80,15 @@ export function TriviaBoard({ who }: { who: Person }) {
       setSecondsLeft(remaining);
       if (remaining <= 0) {
         clearInterval(interval);
+        timerId.current = null;
         submitAnswer(null);
       }
     }, 1000);
-    return () => clearInterval(interval);
+    timerId.current = interval;
+    return () => {
+      clearInterval(interval);
+      if (timerId.current === interval) timerId.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myTurn, match?.id, state?.currentIndex]);
 
@@ -101,7 +115,7 @@ export function TriviaBoard({ who }: { who: Person }) {
 
       {!match && newGameButton}
 
-      {match && state && match.closed_at === null && (
+      {match && state && match.closed_at === null && state.currentIndex < state.questions.length && (
         <>
           <MatchStatus currentTurn={match.current_turn} who={who} />
           <p className={styles.triviaScore}>

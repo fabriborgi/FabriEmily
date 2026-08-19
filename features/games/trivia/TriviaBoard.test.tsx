@@ -75,6 +75,13 @@ describe('TriviaBoard', () => {
     expect(screen.getByRole('button', { name: 'New game' })).toBeDefined();
   });
 
+  it('interroga useActiveMatch/useGameHistory con il game_type "trivia"', () => {
+    useActiveMatch.mockReturnValue({ ...baseState, data: null });
+    render(<TriviaBoard who="fabrizio" />);
+    expect(useActiveMatch).toHaveBeenCalledWith('trivia');
+    expect(useGameHistory).toHaveBeenCalledWith('trivia');
+  });
+
   it('avviando una partita, chiama createMatch con uno stato di 10 domande', async () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: null });
     render(<TriviaBoard who="emily" />);
@@ -144,6 +151,33 @@ describe('TriviaBoard', () => {
     expect(makeMove).toHaveBeenCalled();
     const [, , nextState] = makeMove.mock.calls[0];
     expect(nextState.answers[0]).toBeNull();
+  });
+
+  it('il countdown riparte da 10s quando arriva una nuova domanda', async () => {
+    useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
+    const { rerender } = render(<TriviaBoard who="fabrizio" />);
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(screen.getByText('6s')).toBeDefined();
+    useActiveMatch.mockReturnValue({
+      ...baseState,
+      data: openMatch({ matchState: { currentIndex: 1 } }),
+    });
+    rerender(<TriviaBoard who="fabrizio" />);
+    expect(screen.getByText(`${TIMER_SECONDS}s`)).toBeDefined();
+  });
+
+  it('rispondendo poco prima della scadenza, il timer non invia comunque una seconda mossa', async () => {
+    // Simula la finestra fra makeMove che ha successo e l'arrivo
+    // dell'aggiornamento realtime: il mock di useActiveMatch resta invariato
+    // (come se il refetch non fosse ancora arrivato), quindi myTurn e
+    // currentIndex non cambiano finché il test non lo decide esplicitamente.
+    useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
+    render(<TriviaBoard who="fabrizio" />);
+    await vi.advanceTimersByTimeAsync(9000);
+    screen.getByRole('button', { name: 'a' }).click();
+    await waitFor(() => expect(makeMove).toHaveBeenCalledTimes(1));
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(makeMove).toHaveBeenCalledTimes(1);
   });
 
   it('due tocchi rapidi su risposte diverse inviano una sola mossa', async () => {

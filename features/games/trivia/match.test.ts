@@ -19,11 +19,26 @@ describe('logica di Trivia', () => {
     expect(unique.size).toBe(QUESTIONS_PER_MATCH);
   });
 
-  it('drawMatch pesca dal banco reale di domande', () => {
+  it('drawMatch pesca dal banco reale di domande, con le opzioni rimescolate', () => {
     const state = drawMatch();
     for (const question of state.questions) {
-      expect(QUESTIONS).toContainEqual(question);
+      const original = QUESTIONS.find((candidate) => candidate.prompt === question.prompt);
+      expect(original).toBeDefined();
+      expect(new Set(question.options)).toEqual(new Set(original!.options));
+      expect(question.options[question.correctIndex]).toBe(original!.options[original!.correctIndex]);
     }
+  });
+
+  it('drawMatch rimescola le opzioni invece di lasciarle sempre nell\'ordine originale', () => {
+    // Su 10 domande pescate a caso, la probabilità che tutte restino
+    // nell'ordine originale (1/24 a domanda) è trascurabile: se questo test
+    // fallisce di continuo, drawMatch ha smesso di rimescolare davvero.
+    const state = drawMatch();
+    const changed = state.questions.some((question) => {
+      const original = QUESTIONS.find((candidate) => candidate.prompt === question.prompt)!;
+      return question.options.some((option, i) => option !== original.options[i]);
+    });
+    expect(changed).toBe(true);
   });
 
   it('inizia con currentIndex a 0 e nessuna risposta', () => {
