@@ -186,12 +186,33 @@
   font: var(--font-body);
 }
 .quoridorCellLegal { background: var(--accent); color: var(--accent-fg); }
+.quoridorWall {
+  position: absolute;
+  background: var(--fg);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.quoridorWallHorizontal { height: 6px; transform: translateY(-50%); }
+.quoridorWallVertical { width: 6px; transform: translateX(-50%); }
+/* Bersaglio di tocco più grande del punto visivo: il cerchio (::before) resta
+   piccolo per non ingombrare il tabellone, ma l'area tappabile del <button>
+   arriva vicino ai 44px anche se il tabellone stringe le 64 intersezioni. */
 .quoridorAnchor {
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: none;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+.quoridorAnchor::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--fg-muted);
   opacity: 0.5;

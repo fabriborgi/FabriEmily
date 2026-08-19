@@ -36,6 +36,11 @@ export function goalRow(person: Person, startedBy: Person): number {
  * alle colonne `col` e `col+1`. Un muro verticale blocca gli spostamenti
  * laterali (cambio di colonna) fra la colonna `col` e `col+1`, alle righe
  * `row` e `row+1`. Ogni muro blocca sempre 2 bordi distinti, mai 1.
+ *
+ * Presuppone che `a` e `b` siano ortogonalmente adiacenti (unica forma di
+ * bordo che esiste in questo gioco — nessuna mossa diagonale libera, solo
+ * il salto diagonale già gestito a parte in legalMoves). Con una coppia non
+ * adiacente il risultato non è definito.
  */
 export function wallBlocksEdge(wall: Wall, a: Position, b: Position): boolean {
   if (wall.orientation === 'horizontal') {

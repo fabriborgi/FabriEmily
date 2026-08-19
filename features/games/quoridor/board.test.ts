@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { legalMoves, wallBlocksEdge, type BoardState, type Wall } from './board';
-import { hasPath, isLegalWallPlacement, applyWall } from './board';
+import {
+  legalMoves, wallBlocksEdge, hasPath, isLegalWallPlacement, applyWall, wallsConflict,
+  initialState, goalRow, isWin, applyMove,
+  type BoardState, type Wall,
+} from './board';
 
 describe('wallBlocksEdge', () => {
   it('un muro orizzontale blocca gli spostamenti verticali sotto di sé, non quelli laterali', () => {
@@ -180,6 +183,68 @@ describe('isLegalWallPlacement — non può mai chiudere completamente una strad
 
   it('accetta un muro innocuo altrove sullo stesso tabellone', () => {
     expect(isLegalWallPlacement(state, { row: 0, col: 0, orientation: 'horizontal' }, 'emily', 'fabrizio')).toBe(true);
+  });
+
+  it("rifiuta il muro anche quando è CHI LO PIAZZA a restare senza via d'uscita, non solo l'avversario", () => {
+    // Stessa configurazione, ma stavolta è fabrizio (che sta per restare
+    // intrappolato) a piazzare il muro fatale su se stesso — il controllo
+    // vale per entrambi i giocatori, non solo per l'avversario di chi gioca.
+    expect(isLegalWallPlacement(state, { row: 4, col: 3, orientation: 'vertical' }, 'fabrizio', 'fabrizio')).toBe(false);
+  });
+
+  it('accetta un muro che lascia un solo corridoio stretto, senza richiuderlo del tutto', () => {
+    // Solo sopra e sotto bloccati (2 dei 3 muri di nearBoxWalls): aggiungendo
+    // anche il muro a destra resta comunque aperta la sinistra — un
+    // corridoio stretto, non un vicolo cieco.
+    const twoWalls: Wall[] = [
+      { row: 3, col: 3, orientation: 'horizontal' },
+      { row: 4, col: 4, orientation: 'horizontal' },
+    ];
+    const narrowState: BoardState = {
+      positions: { fabrizio: { row: 4, col: 4 }, emily: { row: 8, col: 4 } },
+      walls: twoWalls,
+      wallsRemaining: { fabrizio: 9, emily: 9 },
+    };
+    expect(isLegalWallPlacement(narrowState, { row: 3, col: 4, orientation: 'vertical' }, 'emily', 'fabrizio')).toBe(true);
+  });
+});
+
+describe('wallsConflict', () => {
+  it('muri con lo stesso orientamento confliggono se vicini, non se separati da almeno una casella', () => {
+    expect(wallsConflict({ row: 4, col: 4, orientation: 'horizontal' }, { row: 4, col: 5, orientation: 'horizontal' })).toBe(true);
+    expect(wallsConflict({ row: 4, col: 4, orientation: 'horizontal' }, { row: 4, col: 6, orientation: 'horizontal' })).toBe(false);
+  });
+
+  it('muri perpendicolari confliggono solo se ancorati sulla stessa identica intersezione', () => {
+    expect(wallsConflict({ row: 4, col: 4, orientation: 'horizontal' }, { row: 4, col: 4, orientation: 'vertical' })).toBe(true);
+    expect(wallsConflict({ row: 4, col: 4, orientation: 'horizontal' }, { row: 3, col: 4, orientation: 'vertical' })).toBe(false);
+  });
+});
+
+describe('initialState, goalRow, isWin, applyMove', () => {
+  it('posiziona chi inizia in riga 0 e l\'altro in riga 8, entrambi al centro, 10 muri a testa', () => {
+    const state = initialState('emily');
+    expect(state.positions.emily).toEqual({ row: 0, col: 4 });
+    expect(state.positions.fabrizio).toEqual({ row: 8, col: 4 });
+    expect(state.wallsRemaining).toEqual({ fabrizio: 10, emily: 10 });
+    expect(state.walls).toEqual([]);
+  });
+
+  it('goalRow è la riga opposta a quella di partenza', () => {
+    expect(goalRow('emily', 'emily')).toBe(8);
+    expect(goalRow('fabrizio', 'emily')).toBe(0);
+  });
+
+  it('isWin è vero solo sulla riga obiettivo', () => {
+    expect(isWin({ row: 8, col: 3 }, 8)).toBe(true);
+    expect(isWin({ row: 7, col: 4 }, 8)).toBe(false);
+  });
+
+  it('applyMove aggiorna solo la posizione di chi si muove', () => {
+    const state = initialState('fabrizio');
+    const next = applyMove(state, 'fabrizio', { row: 1, col: 4 });
+    expect(next.positions.fabrizio).toEqual({ row: 1, col: 4 });
+    expect(next.positions.emily).toEqual(state.positions.emily);
   });
 });
 

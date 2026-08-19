@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { displayName, type Person } from '@/features/auth/identity';
 import { useActiveMatch } from '../useActiveMatch';
 import { useGameHistory } from '../useGameHistory';
@@ -24,6 +24,13 @@ export function QuoridorBoard({ who }: { who: Person }) {
   // basta fra due tocchi molto ravvicinati.
   const sending = useRef(false);
 
+  // Senza questo, finire una partita in modalità Wall lascerebbe la
+  // prossima partita aperta già in modalità Wall.
+  useEffect(() => {
+    setMode('move');
+    setSelectedAnchor(null);
+  }, [match?.id, match?.closed_at]);
+
   async function start() {
     if (sending.current) return;
     sending.current = true;
@@ -39,6 +46,10 @@ export function QuoridorBoard({ who }: { who: Person }) {
     if (sending.current || !match) return;
     const state = match.state as BoardState;
     if (match.current_turn !== who) return;
+    // make_move non valida le regole del gioco: il client è l'unico
+    // controllo. Un render stale (es. due tocchi molto ravvicinati) non deve
+    // poter inviare una mossa illegale — stesso ricontrollo di ConnectFourBoard.
+    if (!legalMoves(state, who).some((m) => m.row === to.row && m.col === to.col)) return;
     sending.current = true;
     setBusy(true);
     setError(null);
@@ -58,6 +69,9 @@ export function QuoridorBoard({ who }: { who: Person }) {
     if (sending.current || !match) return;
     const state = match.state as BoardState;
     if (match.current_turn !== who) return;
+    // Stesso principio di submitMove: il pulsante disabilitato non basta da
+    // solo contro un render stale, il piazzamento va ricontrollato qui.
+    if (!isLegalWallPlacement(state, wall, who, match.started_by)) return;
     sending.current = true;
     setBusy(true);
     setError(null);
@@ -150,11 +164,35 @@ export function QuoridorBoard({ who }: { who: Person }) {
                       disabled={!isLegalTarget || busy}
                       aria-label={`Row ${row + 1}, column ${col + 1}${isFabrizio ? ', Fabrizio' : isEmily ? ', Emily' : ''}`}
                     >
+                      {/* Il pallino pieno/vuoto è legato all'identità fissa (Fabrizio/Emily), non
+                          a chi ha iniziato — a differenza di Forza4, qui i ruoli non si alternano. */}
                       {isFabrizio ? '●' : isEmily ? '○' : ''}
                     </button>
                   );
                 }),
               )}
+              {state.walls.map((wall, i) => {
+                const isHorizontal = wall.orientation === 'horizontal';
+                const wallStyle = isHorizontal
+                  ? {
+                      top: `${((wall.row + 1) / SIZE) * 100}%`,
+                      left: `${(wall.col / SIZE) * 100}%`,
+                      width: `${(2 / SIZE) * 100}%`,
+                    }
+                  : {
+                      top: `${(wall.row / SIZE) * 100}%`,
+                      left: `${((wall.col + 1) / SIZE) * 100}%`,
+                      height: `${(2 / SIZE) * 100}%`,
+                    };
+                return (
+                  <div
+                    key={`wall-${i}`}
+                    className={`${styles.quoridorWall} ${isHorizontal ? styles.quoridorWallHorizontal : styles.quoridorWallVertical}`}
+                    style={wallStyle}
+                    aria-hidden
+                  />
+                );
+              })}
               {mode === 'wall' &&
                 myTurn &&
                 anchors.map((anchor) => (
@@ -169,7 +207,7 @@ export function QuoridorBoard({ who }: { who: Person }) {
                   />
                 ))}
             </div>
-            {mode === 'wall' && selectedAnchor && (
+            {mode === 'wall' && myTurn && selectedAnchor && (
               <div className={styles.quoridorOrientationRow}>
                 {(['horizontal', 'vertical'] as Orientation[]).map((orientation) => {
                   const wall: Wall = { ...selectedAnchor, orientation };
