@@ -510,6 +510,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      select_pet_skin: {
+        Args: { p_skin_key: string; p_species_key: string }
+        Returns: {
+          active_skin: string | null
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname: string | null
+          species_key: string
+          stats: Json
+          unlocked_at: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       select_theme: { Args: { p_theme_key: string }; Returns: undefined }
       skip_question: {
         Args: {

@@ -19,6 +19,7 @@ const MESSAGES: Array<[string, string]> = [
   ['already_unlocked', 'You already unlocked that one.'],
   ['pet_not_found', "That animal or plant isn't unlocked yet."],
   ['invalid_pet_name', 'Choose a name up to 40 characters.'],
+  ['skin_not_owned', "You don't own that skin yet."],
   ['theme_not_owned', "You don't own that theme yet."],
   ['match_already_open', "There's already a game waiting for a move."],
   ['not_your_turn', "It's not your turn yet."],
