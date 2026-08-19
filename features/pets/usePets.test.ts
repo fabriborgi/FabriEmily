@@ -21,6 +21,7 @@ function fakeClient() {
 const state = (over: Partial<PetsState> = {}): PetsState => ({
   prices: { pet_dog: 35 },
   pets: [],
+  ownedSkins: [],
   ...over,
 });
 

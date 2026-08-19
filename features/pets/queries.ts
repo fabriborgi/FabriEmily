@@ -7,10 +7,12 @@ import type { Pet } from './care';
 import type { PetKind } from './species';
 
 export type PetsState = {
-  /** item_prices per le chiavi pet_ / plant_: costo di sblocco. */
+  /** item_prices per le chiavi pet_ / plant_ / skin_: costo di sblocco. */
   prices: Record<string, number>;
   /** Specie sbloccate dalla coppia, con statistiche e nickname correnti. */
   pets: Pet[];
+  /** Chiavi skin_* possedute dalla coppia. */
+  ownedSkins: string[];
 };
 
 type Client = SupabaseClient<Database>;
@@ -25,9 +27,16 @@ export async function fetchPetsState(client?: Client): Promise<PetsState> {
   const { data: pets, error: petsError } = await c.from('pets').select('*');
   if (petsError) throw new Error(petsError.message);
 
+  const { data: ownedItems, error: ownedError } = await c
+    .from('owned_items')
+    .select('key')
+    .like('key', 'skin_%');
+  if (ownedError) throw new Error(ownedError.message);
+
   return {
     prices: Object.fromEntries((prices ?? []).map((p) => [p.key, p.cost])),
     pets: (pets ?? []) as Pet[],
+    ownedSkins: (ownedItems ?? []).map((o) => o.key),
   };
 }
 
@@ -61,4 +70,10 @@ export async function careForPet(
 
 export async function renamePet(speciesKey: string, name: string, client?: Client) {
   return call(db(client).rpc('rename_pet', { p_species_key: speciesKey, p_name: name }));
+}
+
+export async function selectPetSkin(speciesKey: string, skinKey: string | null, client?: Client) {
+  return call(
+    db(client).rpc('select_pet_skin', { p_species_key: speciesKey, p_skin_key: skinKey }),
+  );
 }

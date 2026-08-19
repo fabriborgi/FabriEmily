@@ -8,6 +8,7 @@ export type Pet = {
   stats: Record<string, number>;
   updated_at: string;
   unlocked_at: string;
+  active_skin: string | null;
 };
 
 export const CARE_BOOST = 40;
