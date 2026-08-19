@@ -210,6 +210,41 @@ export type Database = {
           },
         ]
       }
+      pets: {
+        Row: {
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname: string | null
+          species_key: string
+          stats: Json
+          unlocked_at: string
+          updated_at: string
+        }
+        Insert: {
+          kind: Database["public"]["Enums"]["pet_kind"]
+          nickname?: string | null
+          species_key: string
+          stats: Json
+          unlocked_at?: string
+          updated_at?: string
+        }
+        Update: {
+          kind?: Database["public"]["Enums"]["pet_kind"]
+          nickname?: string | null
+          species_key?: string
+          stats?: Json
+          unlocked_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pets_species_key_fkey"
+            columns: ["species_key"]
+            isOneToOne: true
+            referencedRelation: "item_prices"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       question_answers: {
         Row: {
           answered_at: string
@@ -452,6 +487,7 @@ export type Database = {
       game_type: "tic_tac_toe" | "connect_four" | "trivia"
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
+      pet_kind: "animal" | "plant"
       question_category: "deep" | "spicy" | "about_us" | "hypothetical" | "fun"
     }
     CompositeTypes: {
@@ -586,6 +622,7 @@ export const Constants = {
       game_type: ["tic_tac_toe", "connect_four", "trivia"],
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
+      pet_kind: ["animal", "plant"],
       question_category: ["deep", "spicy", "about_us", "hypothetical", "fun"],
     },
   },
