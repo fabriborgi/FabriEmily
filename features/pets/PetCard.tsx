@@ -45,8 +45,10 @@ export function PetCard({
   if (!pet) {
     return (
       <div className={styles.card} data-testid={`pet-card-${species.key}`}>
-        <SpeciesImage speciesKey={species.key} emoji={species.emoji} alt={species.name} className={styles.imageLocked} />
-        <p className={styles.name}>{species.name}</p>
+        <Link href={`/pets/${species.key}`} className={styles.cardLink}>
+          <SpeciesImage speciesKey={species.key} emoji={species.emoji} alt={species.name} className={styles.imageLocked} />
+          <p className={styles.name}>{species.name}</p>
+        </Link>
         <button type="button" className={styles.action} onClick={unlock} disabled={busy || cost === undefined}>
           {busy ? 'Unlocking…' : cost === undefined ? 'Unlock' : `Unlock for ${cost} coins`}
         </button>

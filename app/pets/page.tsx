@@ -9,7 +9,7 @@ import styles from '@/features/pets/pets.module.css';
 
 export default function PetsPage() {
   const { who } = useIdentity();
-  const { data, loading, offline } = usePets();
+  const { data, loading, offline, error } = usePets();
 
   if (loading && !data) return <p className={styles.muted}>Loading…</p>;
 
@@ -21,6 +21,11 @@ export default function PetsPage() {
   return (
     <>
       {offline && <OfflineStrip />}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Animals</h2>
         <div className={styles.grid}>

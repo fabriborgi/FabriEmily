@@ -12,6 +12,10 @@
 .image, .imageLocked { width: 64px; height: 64px; object-fit: contain; }
 .imageLocked { opacity: 0.5; }
 .name { font: var(--font-lead); margin: 0; }
+/* Avvolge solo immagine+nome nella card bloccata: un <a> non può contenere
+   un <button> annidato, quindi il pulsante Unlock resta un fratello, non un
+   figlio, di questo link verso il dettaglio (curiosità + Unlock). */
+.cardLink { display: grid; gap: var(--space-1); text-decoration: none; color: inherit; }
 .action {
   min-height: 44px;
   border-radius: var(--radius-md);

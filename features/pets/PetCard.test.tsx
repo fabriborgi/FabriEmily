@@ -23,6 +23,11 @@ describe('PetCard', () => {
     expect(screen.getByRole('button', { name: 'Unlock for 35 coins' })).toBeDefined();
   });
 
+  it('bloccata: linka comunque al dettaglio (curiosità visibile prima di comprare)', () => {
+    render(<PetCard species={dog} pet={undefined} cost={35} who="fabrizio" />);
+    expect(screen.getByRole('link').getAttribute('href')).toBe('/pets/pet_dog');
+  });
+
   it('sbloccando, chiama unlockPet con le statistiche iniziali', async () => {
     render(<PetCard species={dog} pet={undefined} cost={35} who="emily" />);
     screen.getByRole('button', { name: 'Unlock for 35 coins' }).click();
@@ -38,7 +43,10 @@ describe('PetCard', () => {
     const pet: Pet = {
       species_key: 'pet_dog', kind: 'animal', nickname: 'Rex',
       stats: { hunger: 100, cleanliness: 100, affection: 100 },
-      updated_at: '2026-08-23T10:00:00Z', unlocked_at: '2026-08-23T10:00:00Z',
+      // Data nel passato remoto, non futura: vedi il commento sulla stessa
+      // scelta nel caso "badge" più sotto — projectStats usa l'orologio
+      // reale via useNow().
+      updated_at: '2020-08-23T10:00:00Z', unlocked_at: '2020-08-23T10:00:00Z',
     };
     render(<PetCard species={dog} pet={pet} cost={35} who="fabrizio" />);
     expect(screen.getByText('Rex')).toBeDefined();

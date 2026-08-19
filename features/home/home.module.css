@@ -18,3 +18,4 @@
 }
 .slotTitle { font: var(--font-lead); margin: 0 0 var(--space-1); }
 .slotBody { font: var(--font-small); color: var(--fg-muted); margin: 0; }
+.error { font: var(--font-small); color: var(--danger); margin: 0; }
