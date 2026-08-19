@@ -6,6 +6,7 @@ const GAMES = [
   { slug: 'connect-four', label: 'Connect 4', available: true },
   { slug: 'blackjack', label: 'Blackjack', available: false },
   { slug: 'trivia', label: 'Trivia', available: true },
+  { slug: 'goose', label: 'Goose Game', available: true },
 ];
 
 export default function GamesPage() {

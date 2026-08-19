@@ -21,6 +21,12 @@ describe('GamesPage', () => {
     expect(link.getAttribute('href')).toBe('/games/trivia');
   });
 
+  it('Gioco dell\'oca è ora un link giocabile', () => {
+    render(<GamesPage />);
+    const link = screen.getByRole('link', { name: /Goose Game/ });
+    expect(link.getAttribute('href')).toBe('/games/goose');
+  });
+
   it('mostra Blackjack come "coming soon", senza link', () => {
     render(<GamesPage />);
     expect(screen.getByText('Blackjack')).toBeDefined();

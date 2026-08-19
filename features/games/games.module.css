@@ -129,3 +129,30 @@
   text-align: left;
 }
 .triviaOption:disabled { opacity: 0.45; }
+.gooseStart { text-align: center; font: var(--font-small); color: var(--fg-muted); margin: 0 0 var(--space-2); }
+.gooseRoll { text-align: center; font: var(--font-small); color: var(--fg-muted); margin: 0 0 var(--space-2); }
+.gooseStuck { text-align: center; font: var(--font-small); color: var(--danger); margin: 0 0 var(--space-2); }
+.gooseBoard {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 2px;
+  max-width: 350px;
+  aspect-ratio: 7 / 9;
+  margin: 0 auto var(--space-3);
+}
+.gooseSquare {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  font: var(--font-small);
+  min-height: 0;
+  min-width: 0;
+}
+.gooseSquareNumber { font-size: 9px; color: var(--fg-muted); position: absolute; top: 2px; left: 2px; }
+.gooseToken { font-size: 14px; }
