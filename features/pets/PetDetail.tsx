@@ -7,19 +7,23 @@ import { STAT_LABELS } from './species';
 import type { Pet } from './care';
 import { initialStatsFor, projectStats, applyCareAction } from './care';
 import { unlockPet, careForPet, renamePet } from './queries';
+import { skinFilterFor } from './skins';
 import { useNow } from './useNow';
 import { SpeciesImage } from './SpeciesImage';
+import { SkinPicker } from './SkinPicker';
 import styles from './pets.module.css';
 
 export function PetDetail({
   species,
   pet,
-  cost,
+  prices,
+  ownedSkins,
   who,
 }: {
   species: Species;
   pet: Pet | undefined;
-  cost: number | undefined;
+  prices: Record<string, number>;
+  ownedSkins: string[];
   who: Person;
 }) {
   const now = useNow();
@@ -27,6 +31,7 @@ export function PetDetail({
   const [error, setError] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState(pet?.nickname ?? '');
   const sending = useRef(false);
+  const cost = prices[species.key];
 
   async function unlock() {
     if (sending.current || cost === undefined) return;
@@ -90,6 +95,7 @@ export function PetDetail({
         emoji={species.emoji}
         alt={pet.nickname ?? species.name}
         className={styles.image}
+        filter={skinFilterFor(pet.active_skin)}
       />
       <div className={styles.renameRow}>
         <input
@@ -119,6 +125,13 @@ export function PetDetail({
           </button>
         ))}
       </div>
+      <SkinPicker
+        speciesKey={species.key}
+        activeSkin={pet.active_skin}
+        ownedSkins={ownedSkins}
+        prices={prices}
+        who={who}
+      />
       {error && (
         <p className={styles.error} role="alert">
           {error}

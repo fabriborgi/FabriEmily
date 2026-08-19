@@ -8,6 +8,7 @@ import type { Pet } from './care';
 import { initialStatsFor, projectStats, needsAttention } from './care';
 import { unlockPet } from './queries';
 import { SpeciesImage } from './SpeciesImage';
+import { skinFilterFor } from './skins';
 import { useNow } from './useNow';
 import styles from './pets.module.css';
 
@@ -70,7 +71,13 @@ export function PetCard({
       className={`${styles.card} ${needy ? styles.needy : ''}`}
       data-testid={`pet-card-${species.key}`}
     >
-      <SpeciesImage speciesKey={species.key} emoji={species.emoji} alt={pet.nickname ?? species.name} className={styles.image} />
+      <SpeciesImage
+        speciesKey={species.key}
+        emoji={species.emoji}
+        alt={pet.nickname ?? species.name}
+        className={styles.image}
+        filter={skinFilterFor(pet.active_skin)}
+      />
       <p className={styles.name}>{pet.nickname ?? species.name}</p>
       {needy && <span className={styles.needyBadge}>Needs attention</span>}
     </Link>

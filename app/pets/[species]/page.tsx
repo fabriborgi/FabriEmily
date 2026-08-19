@@ -19,7 +19,6 @@ export default function PetDetailPage() {
   if (loading && !data) return <p>Loading…</p>;
 
   const pet = data?.pets.find((p) => p.species_key === speciesKey);
-  const cost = data?.prices[speciesKey];
 
   return (
     <>
@@ -29,7 +28,7 @@ export default function PetDetailPage() {
           {error}
         </p>
       )}
-      <PetDetail species={species} pet={pet} cost={cost} who={who} />
+      <PetDetail species={species} pet={pet} prices={data?.prices ?? {}} ownedSkins={data?.ownedSkins ?? []} who={who} />
     </>
   );
 }

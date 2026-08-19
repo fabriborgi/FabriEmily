@@ -61,3 +61,18 @@
 .section { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-4) 0; }
 .sectionTitle { font: var(--font-title); margin: 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); }
+.skinGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: var(--space-2); }
+.skinSwatch {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font: var(--font-small);
+}
+.skinSwatch:disabled { opacity: 0.6; }
+.skinSwatch.skinActive { border-color: var(--accent); border-width: 2px; }
+.skinDot { width: 20px; height: 20px; border-radius: 50%; display: block; }

@@ -47,6 +47,7 @@ describe('PetCard', () => {
       // scelta nel caso "badge" più sotto — projectStats usa l'orologio
       // reale via useNow().
       updated_at: '2020-08-23T10:00:00Z', unlocked_at: '2020-08-23T10:00:00Z',
+      active_skin: null,
     };
     render(<PetCard species={dog} pet={pet} cost={35} who="fabrizio" />);
     expect(screen.getByText('Rex')).toBeDefined();
@@ -61,8 +62,21 @@ describe('PetCard', () => {
       // usa l'orologio reale via useNow(), quindi la fixture deve restare
       // valida indipendentemente da quando viene eseguito il test.
       updated_at: '2020-08-23T10:00:00Z', unlocked_at: '2020-08-23T10:00:00Z',
+      active_skin: null,
     };
     render(<PetCard species={dog} pet={pet} cost={35} who="fabrizio" />);
     expect(screen.getByText('Needs attention')).toBeDefined();
+  });
+
+  it('sbloccata con una skin attiva: applica il filtro CSS corrispondente', () => {
+    const pet: Pet = {
+      species_key: 'pet_dog', kind: 'animal', nickname: null,
+      stats: { hunger: 100, cleanliness: 100, affection: 100 },
+      updated_at: new Date().toISOString(), unlocked_at: new Date().toISOString(),
+      active_skin: 'skin_gold',
+    };
+    render(<PetCard species={dog} pet={pet} cost={35} who="fabrizio" />);
+    const img = screen.getByRole('img') as HTMLImageElement;
+    expect(img.style.filter).toBe('hue-rotate(35deg) saturate(1.6) brightness(1.1)');
   });
 });

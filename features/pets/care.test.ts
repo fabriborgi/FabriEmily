@@ -17,6 +17,7 @@ const fern: Species = {
 
 const petAt = (stats: Record<string, number>, updated_at: string): Pet => ({
   species_key: 'pet_dog', kind: 'animal', nickname: null, stats, updated_at, unlocked_at: updated_at,
+  active_skin: null,
 });
 
 describe('initialStatsFor', () => {

@@ -39,6 +39,7 @@ describe('usePets', () => {
             stats: { hunger: 100, cleanliness: 100, affection: 100 },
             updated_at: '2026-08-23T10:00:00Z',
             unlocked_at: '2026-08-23T10:00:00Z',
+            active_skin: null,
           },
         ],
       }),

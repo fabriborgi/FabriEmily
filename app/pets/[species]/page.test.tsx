@@ -13,7 +13,7 @@ vi.mock('@/features/pets/usePets', () => ({ usePets: () => usePets() }));
 
 describe('PetDetailPage', () => {
   it('mostra il dettaglio della specie richiesta', () => {
-    usePets.mockReturnValue({ data: { prices: { pet_dog: 35 }, pets: [] }, loading: false, error: null, offline: false, refetch: vi.fn() });
+    usePets.mockReturnValue({ data: { prices: { pet_dog: 35 }, pets: [], ownedSkins: [] }, loading: false, error: null, offline: false, refetch: vi.fn() });
     render(<PetDetailPage />);
     expect(screen.getByRole('button', { name: 'Unlock for 35 coins' })).toBeDefined();
   });

@@ -22,6 +22,7 @@ const pet: Pet = {
   species_key: 'plant_fern', kind: 'plant', nickname: null,
   stats: { water: 40, light: 100 },
   updated_at: new Date().toISOString(), unlocked_at: new Date().toISOString(),
+  active_skin: null,
 };
 
 describe('PetDetail', () => {
@@ -35,20 +36,20 @@ describe('PetDetail', () => {
   });
 
   it('bloccata: mostra la curiosità e il pulsante Unlock', () => {
-    render(<PetDetail species={fern} pet={undefined} cost={25} who="fabrizio" />);
+    render(<PetDetail species={fern} pet={undefined} prices={{ plant_fern: 25 }} ownedSkins={[]} who="fabrizio" />);
     expect(screen.getByText('An old plant family.')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Unlock for 25 coins' })).toBeDefined();
   });
 
   it('sbloccata: mostra le statistiche correnti e i pulsanti di cura', () => {
-    render(<PetDetail species={fern} pet={pet} cost={25} who="fabrizio" />);
+    render(<PetDetail species={fern} pet={pet} prices={{ plant_fern: 25 }} ownedSkins={[]} who="fabrizio" />);
     expect(screen.getByText('40')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Water' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Light' })).toBeDefined();
   });
 
   it('un tap su Water chiama careForPet con la statistica alzata', async () => {
-    render(<PetDetail species={fern} pet={pet} cost={25} who="fabrizio" />);
+    render(<PetDetail species={fern} pet={pet} prices={{ plant_fern: 25 }} ownedSkins={[]} who="fabrizio" />);
     screen.getByRole('button', { name: 'Water' }).click();
     await waitFor(() => expect(careForPet).toHaveBeenCalled());
     const [actor, key, stats] = careForPet.mock.calls[0];
@@ -62,7 +63,7 @@ describe('PetDetail', () => {
   });
 
   it('salvando il nome, chiama renamePet', async () => {
-    render(<PetDetail species={fern} pet={pet} cost={25} who="fabrizio" />);
+    render(<PetDetail species={fern} pet={pet} prices={{ plant_fern: 25 }} ownedSkins={[]} who="fabrizio" />);
     const input = screen.getByPlaceholderText('Fern') as HTMLInputElement;
     input.focus();
     (input as unknown as { value: string }).value = 'Frondy';
@@ -70,5 +71,11 @@ describe('PetDetail', () => {
     screen.getByRole('button', { name: 'Save name' }).click();
     await waitFor(() => expect(renamePet).toHaveBeenCalled());
     expect(renamePet.mock.calls[0][0]).toBe('plant_fern');
+  });
+
+  it('mostra la sezione Skins con l’opzione Natural per un animale sbloccato', () => {
+    render(<PetDetail species={fern} pet={pet} prices={{ plant_fern: 25 }} ownedSkins={[]} who="fabrizio" />);
+    expect(screen.getByText('Skins')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Natural' })).toBeDefined();
   });
 });
