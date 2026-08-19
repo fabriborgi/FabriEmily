@@ -511,7 +511,7 @@ export type Database = {
         }
       }
       select_pet_skin: {
-        Args: { p_skin_key: string; p_species_key: string }
+        Args: { p_skin_key: string | null; p_species_key: string }
         Returns: {
           active_skin: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
