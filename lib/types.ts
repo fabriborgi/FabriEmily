@@ -212,6 +212,7 @@ export type Database = {
       }
       pets: {
         Row: {
+          active_skin: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
           nickname: string | null
           species_key: string
@@ -220,6 +221,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_skin?: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
           nickname?: string | null
           species_key: string
@@ -228,6 +230,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_skin?: string | null
           kind?: Database["public"]["Enums"]["pet_kind"]
           nickname?: string | null
           species_key?: string
@@ -362,6 +365,7 @@ export type Database = {
           p_stats: Json
         }
         Returns: {
+          active_skin: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
           nickname: string | null
           species_key: string
@@ -491,6 +495,7 @@ export type Database = {
       rename_pet: {
         Args: { p_name: string; p_species_key: string }
         Returns: {
+          active_skin: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
           nickname: string | null
           species_key: string
@@ -528,6 +533,7 @@ export type Database = {
           p_species_key: string
         }
         Returns: {
+          active_skin: string | null
           kind: Database["public"]["Enums"]["pet_kind"]
           nickname: string | null
           species_key: string
