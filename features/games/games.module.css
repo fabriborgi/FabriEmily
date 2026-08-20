@@ -229,3 +229,46 @@
   font: var(--font-body);
 }
 .quoridorOrientationButton:disabled { opacity: 0.45; }
+
+.backgammonInfo { text-align: center; font: var(--font-small); color: var(--fg-muted); margin: 0 0 var(--space-2); }
+.backgammonDiceRow { display: flex; gap: var(--space-2); justify-content: center; margin: 0 0 var(--space-2); }
+.backgammonDie {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-lead);
+}
+.backgammonDie.backgammonDieSelected { background: var(--accent); color: var(--accent-fg); }
+.backgammonBoard {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1px;
+  margin: 0 auto var(--space-2);
+}
+.backgammonPoint {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-small);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.backgammonPointLegal { background: var(--accent); color: var(--accent-fg); }
+.backgammonPointNumber { font-size: 9px; color: var(--fg-muted); }
+.backgammonActionsRow { display: flex; gap: var(--space-2); justify-content: center; margin: var(--space-3) 0; }
+.backgammonActionButton {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font: var(--font-body);
+}
+.backgammonActionButton:disabled { opacity: 0.45; }
