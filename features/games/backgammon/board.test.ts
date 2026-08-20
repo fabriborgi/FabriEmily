@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   initialState, direction, barPosition, homeRange, rollDice, dieValuesForRoll,
   mustEnterFromBar, isLegalSingleMove, legalSources, applySingleMove, isWin,
+  canBearOff,
   type BoardState, type PointState,
 } from './board';
 
@@ -173,5 +174,90 @@ describe('isWin', () => {
     };
     expect(isWin(state, 'fabrizio')).toBe(true);
     expect(isWin(state, 'emily')).toBe(false);
+  });
+});
+
+describe('canBearOff', () => {
+  it('è vero quando tutte le proprie pedine sono nella propria casa e la barra è vuota', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 2 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    expect(canBearOff(state, 'fabrizio', 'fabrizio')).toBe(true);
+  });
+
+  it('è falso se una propria pedina è fuori dalla casa', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 }, 10: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    expect(canBearOff(state, 'fabrizio', 'fabrizio')).toBe(false);
+  });
+
+  it('è falso con pedine sulla barra, anche se il resto è tutto in casa', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 1, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    expect(canBearOff(state, 'fabrizio', 'fabrizio')).toBe(false);
+  });
+});
+
+describe('isLegalBearOff — regola dell\'eccedenza', () => {
+  it('un dado che porta esattamente a 0 (o 25) toglie la pedina', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    expect(isLegalSingleMove(state, 'fabrizio', 'fabrizio', 4, 4)).toBe(true);
+  });
+
+  it('un dado in eccedenza è legale se nessuna propria pedina resta più lontana dalla casa', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    // Dal punto 4, un dado di 6 supera lo 0: legale solo se 5 e 6 sono vuoti per fabrizio.
+    expect(isLegalSingleMove(state, 'fabrizio', 'fabrizio', 4, 6)).toBe(true);
+  });
+
+  it('un dado in eccedenza è illegale se esiste una propria pedina più lontana dalla casa', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 }, 6: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    // La pedina sul 6 è più lontana dalla casa (dal punto di vista dell'uscita) di quella sul 4:
+    // il dado 6 va usato per spostare/togliere quella, non per togliere la pedina sul 4.
+    expect(isLegalSingleMove(state, 'fabrizio', 'fabrizio', 4, 6)).toBe(false);
+    // La stessa pedina sul 6 invece può uscire con un dado 6 (esatto).
+    expect(isLegalSingleMove(state, 'fabrizio', 'fabrizio', 6, 6)).toBe(true);
+  });
+
+  it('nessun bear-off finché canBearOff è falso, anche con un dado esatto', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 4: { owner: 'fabrizio', count: 1 }, 10: { owner: 'fabrizio', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    expect(isLegalSingleMove(state, 'fabrizio', 'fabrizio', 4, 4)).toBe(false);
+  });
+
+  it('la stessa regola vale simmetrica per chi si muove in crescente (casa 19-24, esce sopra il 25)', () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 21: { owner: 'emily', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    // emily (l'altro rispetto a startedBy='fabrizio') si muove in crescente, casa 19-24, esce sopra 25.
+    // Dal 21, un dado di 4 porta a 25 esatto.
+    expect(isLegalSingleMove(state, 'emily', 'fabrizio', 21, 4)).toBe(true);
+    // Un dado di 6 dal 21 porta a 27, eccedenza: legale solo se 19-20 sono vuoti per emily.
+    expect(isLegalSingleMove(state, 'emily', 'fabrizio', 21, 6)).toBe(true);
   });
 });

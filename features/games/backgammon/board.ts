@@ -156,13 +156,49 @@ export function isWin(state: BoardState, person: Person): boolean {
   return state.borneOff[person] === 15;
 }
 
-// --- Bear-off: implementato nel Task 3. Stub temporaneo, sostituito per intero dal Task 3. ---
-function isLegalBearOff(
-  _state: BoardState,
-  _person: Person,
-  _startedBy: Person,
-  _from: number,
-  _die: number,
-): boolean {
-  throw new Error('not implemented until Task 3');
+export function canBearOff(state: BoardState, person: Person, startedBy: Person): boolean {
+  if (state.bar[person] > 0) return false;
+  const [homeStart, homeEnd] = homeRange(person, startedBy);
+  for (let p = 1; p <= POINTS; p++) {
+    if (p >= homeStart && p <= homeEnd) continue;
+    const point = state.points[p];
+    if (point && point.owner === person && point.count > 0) return false;
+  }
+  return true;
 }
+
+/**
+ * Chiamata solo quando la mossa esce dal tabellone (isOffBoard(to, dir) è vero).
+ * A quel punto vale già `from` ≤ die (direzione decrescente) o (25 - from) ≤ die
+ * (direzione crescente): o è l'uscita esatta, o è in eccedenza — mai il caso
+ * "resta dentro il tabellone", già escluso dal chiamante.
+ */
+function isLegalBearOff(
+  state: BoardState,
+  person: Person,
+  startedBy: Person,
+  from: number,
+  die: number,
+): boolean {
+  if (!canBearOff(state, person, startedBy)) return false;
+  const dir = direction(person, startedBy);
+  const [homeStart, homeEnd] = homeRange(person, startedBy);
+
+  if (dir === -1) {
+    if (from === die) return true; // uscita esatta
+    // Eccedenza: legale solo se nessuna propria pedina resta su un punto più lontano dalla casa.
+    for (let p = from + 1; p <= homeEnd; p++) {
+      const point = state.points[p];
+      if (point && point.owner === person && point.count > 0) return false;
+    }
+    return true;
+  }
+
+  if (25 - from === die) return true; // uscita esatta
+  for (let p = homeStart; p < from; p++) {
+    const point = state.points[p];
+    if (point && point.owner === person && point.count > 0) return false;
+  }
+  return true;
+}
+
