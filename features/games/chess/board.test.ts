@@ -260,3 +260,126 @@ describe('pseudoLegalMoves — arrocco', () => {
     expect(has(moves, { row: 0, col: 2 })).toBe(true);
   });
 });
+
+import { isPromotion, applyMove, legalMoves } from './board';
+
+describe('isPromotion', () => {
+  it('è vero solo per un pedone che raggiunge l\'ultima riga', () => {
+    const state = customState({
+      pieces: [{ square: { row: 6, col: 4 }, piece: { type: 'pawn', color: 'white' } }],
+    });
+    expect(isPromotion(state, { row: 6, col: 4 }, { row: 7, col: 4 })).toBe(true);
+    expect(isPromotion(state, { row: 6, col: 4 }, { row: 6, col: 4 })).toBe(false);
+  });
+});
+
+describe('applyMove', () => {
+  it('una mossa semplice sposta il pezzo e svuota la casella di partenza', () => {
+    const state = customState({
+      pieces: [{ square: { row: 1, col: 4 }, piece: { type: 'pawn', color: 'white' } }],
+    });
+    const next = applyMove(state, { row: 1, col: 4 }, { row: 3, col: 4 });
+    expect(pieceAt(next, { row: 1, col: 4 })).toBeNull();
+    expect(pieceAt(next, { row: 3, col: 4 })).toEqual({ type: 'pawn', color: 'white' });
+  });
+
+  it('il doppio passo del pedone imposta enPassantTarget sulla casella saltata', () => {
+    const state = customState({
+      pieces: [{ square: { row: 1, col: 4 }, piece: { type: 'pawn', color: 'white' } }],
+    });
+    const next = applyMove(state, { row: 1, col: 4 }, { row: 3, col: 4 });
+    expect(next.enPassantTarget).toEqual({ row: 2, col: 4 });
+  });
+
+  it('la presa en passant rimuove il pedone catturato, non sulla casella di arrivo', () => {
+    const state = customState({
+      pieces: [
+        { square: { row: 4, col: 4 }, piece: { type: 'pawn', color: 'white' } }, // e5
+        { square: { row: 4, col: 3 }, piece: { type: 'pawn', color: 'black' } }, // d5
+      ],
+      enPassantTarget: { row: 5, col: 3 }, // d6
+    });
+    const next = applyMove(state, { row: 4, col: 4 }, { row: 5, col: 3 });
+    expect(pieceAt(next, { row: 5, col: 3 })).toEqual({ type: 'pawn', color: 'white' });
+    expect(pieceAt(next, { row: 4, col: 3 })).toBeNull(); // il pedone nero catturato sparisce
+  });
+
+  it('l\'arrocco corto sposta anche la torre', () => {
+    const state = customState({
+      pieces: [
+        { square: { row: 0, col: 4 }, piece: { type: 'king', color: 'white' } },
+        { square: { row: 0, col: 7 }, piece: { type: 'rook', color: 'white' } },
+      ],
+      castlingRights: {
+        white: { kingside: true, queenside: false },
+        black: { kingside: false, queenside: false },
+      },
+    });
+    const next = applyMove(state, { row: 0, col: 4 }, { row: 0, col: 6 });
+    expect(pieceAt(next, { row: 0, col: 6 })).toEqual({ type: 'king', color: 'white' });
+    expect(pieceAt(next, { row: 0, col: 5 })).toEqual({ type: 'rook', color: 'white' });
+    expect(pieceAt(next, { row: 0, col: 7 })).toBeNull();
+    expect(next.castlingRights.white).toEqual({ kingside: false, queenside: false });
+  });
+
+  it('la promozione sostituisce il pedone con il pezzo scelto', () => {
+    const state = customState({
+      pieces: [{ square: { row: 6, col: 4 }, piece: { type: 'pawn', color: 'white' } }],
+    });
+    const next = applyMove(state, { row: 6, col: 4 }, { row: 7, col: 4 }, 'rook');
+    expect(pieceAt(next, { row: 7, col: 4 })).toEqual({ type: 'rook', color: 'white' });
+  });
+
+  it('muovere la torre di casa toglie il diritto di arrocco solo su quel lato', () => {
+    const state = customState({
+      pieces: [{ square: { row: 0, col: 0 }, piece: { type: 'rook', color: 'white' } }],
+      castlingRights: {
+        white: { kingside: true, queenside: true },
+        black: { kingside: true, queenside: true },
+      },
+    });
+    const next = applyMove(state, { row: 0, col: 0 }, { row: 0, col: 3 });
+    expect(next.castlingRights.white).toEqual({ kingside: true, queenside: false });
+  });
+
+  it('catturare la torre avversaria in casa toglie il diritto di arrocco su quel lato', () => {
+    const state = customState({
+      pieces: [
+        { square: { row: 6, col: 0 }, piece: { type: 'rook', color: 'white' } },
+        { square: { row: 7, col: 0 }, piece: { type: 'rook', color: 'black' } },
+      ],
+      castlingRights: {
+        white: { kingside: true, queenside: true },
+        black: { kingside: true, queenside: true },
+      },
+    });
+    const next = applyMove(state, { row: 6, col: 0 }, { row: 7, col: 0 });
+    expect(next.castlingRights.black).toEqual({ kingside: true, queenside: false });
+  });
+});
+
+describe('legalMoves — filtro di autoscacco', () => {
+  it('una pedina inchiodata sul re non può muoversi, anche se il movimento sarebbe altrimenti legale', () => {
+    // Re bianco e1, cavallo bianco e2 (inchiodato), torre nera e8 lungo la colonna e.
+    const state = customState({
+      pieces: [
+        { square: { row: 0, col: 4 }, piece: { type: 'king', color: 'white' } },
+        { square: { row: 1, col: 4 }, piece: { type: 'knight', color: 'white' } },
+        { square: { row: 7, col: 4 }, piece: { type: 'rook', color: 'black' } },
+      ],
+    });
+    expect(legalMoves(state, { row: 1, col: 4 })).toEqual([]);
+  });
+
+  it('il re non può muoversi su una casella comunque attaccata', () => {
+    const state = customState({
+      pieces: [
+        { square: { row: 0, col: 4 }, piece: { type: 'king', color: 'white' } },
+        { square: { row: 7, col: 5 }, piece: { type: 'rook', color: 'black' } }, // colonna f, attacca f1
+      ],
+    });
+    const moves = legalMoves(state, { row: 0, col: 4 });
+    expect(has(moves, { row: 0, col: 5 })).toBe(false); // f1, attaccata
+    expect(has(moves, { row: 0, col: 3 })).toBe(true); // d1, libera e non attaccata
+  });
+});

@@ -215,3 +215,80 @@ export function pseudoLegalMoves(state: BoardState, from: Square): Square[] {
       return [...stepMoves(state, from, KING_OFFSETS), ...castlingMoves(state, from, piece.color)];
   }
 }
+
+export function isPromotion(state: BoardState, from: Square, to: Square): boolean {
+  const piece = pieceAt(state, from);
+  if (!piece || piece.type !== 'pawn') return false;
+  const lastRow = piece.color === 'white' ? SIZE - 1 : 0;
+  return to.row === lastRow;
+}
+
+export function applyMove(state: BoardState, from: Square, to: Square, promotion?: PieceType): BoardState {
+  const piece = pieceAt(state, from)!;
+  const board = state.board.map((row) => row.slice());
+  const castlingRights: Record<Color, CastlingRights> = {
+    white: { ...state.castlingRights.white },
+    black: { ...state.castlingRights.black },
+  };
+  let enPassantTarget: Square | null = null;
+
+  // Presa en passant: il pedone catturato non è sulla casella di arrivo.
+  if (
+    piece.type === 'pawn' &&
+    state.enPassantTarget &&
+    to.row === state.enPassantTarget.row &&
+    to.col === state.enPassantTarget.col &&
+    !board[to.row][to.col]
+  ) {
+    const capturedRow = piece.color === 'white' ? to.row - 1 : to.row + 1;
+    board[capturedRow][to.col] = null;
+  }
+
+  // Arrocco: sposta anche la torre.
+  if (piece.type === 'king' && Math.abs(to.col - from.col) === 2) {
+    const row = from.row;
+    if (to.col === 6) {
+      board[row][5] = board[row][7];
+      board[row][7] = null;
+    } else if (to.col === 2) {
+      board[row][3] = board[row][0];
+      board[row][0] = null;
+    }
+  }
+
+  board[from.row][from.col] = null;
+  board[to.row][to.col] =
+    piece.type === 'pawn' && isPromotion(state, from, to)
+      ? { type: promotion ?? 'queen', color: piece.color }
+      : piece;
+
+  // Doppio passo del pedone: imposta il nuovo bersaglio en passant.
+  if (piece.type === 'pawn' && Math.abs(to.row - from.row) === 2) {
+    enPassantTarget = { row: (from.row + to.row) / 2, col: from.col };
+  }
+
+  // Aggiorna i diritti di arrocco: il re o la torre si sono mossi, o la torre è stata catturata.
+  if (piece.type === 'king') {
+    castlingRights[piece.color] = { kingside: false, queenside: false };
+  }
+  if (piece.type === 'rook') {
+    const homeRow = piece.color === 'white' ? 0 : SIZE - 1;
+    if (from.row === homeRow && from.col === 0) castlingRights[piece.color].queenside = false;
+    if (from.row === homeRow && from.col === 7) castlingRights[piece.color].kingside = false;
+  }
+  const opponent: Color = piece.color === 'white' ? 'black' : 'white';
+  const opponentHomeRow = opponent === 'white' ? 0 : SIZE - 1;
+  if (to.row === opponentHomeRow && to.col === 0) castlingRights[opponent].queenside = false;
+  if (to.row === opponentHomeRow && to.col === 7) castlingRights[opponent].kingside = false;
+
+  return { board, castlingRights, enPassantTarget };
+}
+
+export function legalMoves(state: BoardState, from: Square): Square[] {
+  const piece = pieceAt(state, from);
+  if (!piece) return [];
+  return pseudoLegalMoves(state, from).filter((to) => {
+    const next = applyMove(state, from, to, 'queen'); // la scelta di promozione non conta per il test di autoscacco
+    return !isInCheck(next, piece.color);
+  });
+}
