@@ -574,6 +574,7 @@ export type Database = {
         | "trivia"
         | "goose"
         | "quoridor"
+        | "backgammon"
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
       pet_kind: "animal" | "plant"
@@ -708,7 +709,14 @@ export const Constants = {
   },
   public: {
     Enums: {
-      game_type: ["tic_tac_toe", "connect_four", "trivia", "goose", "quoridor"],
+      game_type: [
+        "tic_tac_toe",
+        "connect_four",
+        "trivia",
+        "goose",
+        "quoridor",
+        "backgammon",
+      ],
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
       pet_kind: ["animal", "plant"],
