@@ -575,6 +575,7 @@ export type Database = {
         | "goose"
         | "quoridor"
         | "backgammon"
+        | "chess"
       letter_kind: "text" | "drawing"
       person: "fabrizio" | "emily"
       pet_kind: "animal" | "plant"
@@ -716,6 +717,7 @@ export const Constants = {
         "goose",
         "quoridor",
         "backgammon",
+        "chess",
       ],
       letter_kind: ["text", "drawing"],
       person: ["fabrizio", "emily"],
