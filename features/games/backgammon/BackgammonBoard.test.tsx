@@ -121,6 +121,50 @@ describe('BackgammonBoard', () => {
     expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
   });
 
+  it('con pedine sulla barra, solo "Enter from bar" è selezionabile, non i punti normali', async () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5); // doppio 4
+    const boardState = initialState('fabrizio');
+    boardState.bar.fabrizio = 1;
+    useActiveMatch.mockReturnValue({ ...baseState, data: openMatch({ boardState }) });
+    render(<BackgammonBoard who="fabrizio" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Roll dice' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Die 4' })[0]);
+    // Con la barra occupata, i punti normali restano disabilitati anche se in
+    // disposizione standard fabrizio ha già pedine sul 24.
+    expect((screen.getByRole('button', { name: /Point 24/ }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Enter from bar' }));
+    randomSpy.mockRestore();
+    fireEvent.click(screen.getByRole('button', { name: 'End turn' }));
+    await waitFor(() => expect(makeMove).toHaveBeenCalled());
+    const [, , nextState] = makeMove.mock.calls[0];
+    expect(nextState.bar.fabrizio).toBe(0);
+    // Dalla barra (25), un dado 4 in direzione decrescente rientra sul 21.
+    expect(nextState.points[21]).toEqual({ owner: 'fabrizio', count: 1 });
+  });
+
+  it('a fine turno (dadi esauriti), "Roll dice" scompare e non si può più ritirare cancellando il turno', () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5); // doppio 4
+    useActiveMatch.mockReturnValue({ ...baseState, data: openMatch() });
+    render(<BackgammonBoard who="fabrizio" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Roll dice' }));
+    // Gioca i 4 dadi da 4 su quattro pedine diverse di fabrizio (24, 13, 8, 6 nella
+    // disposizione standard), tutte mosse indipendenti verso caselle libere — evita
+    // di incatenare la stessa pedina su una casella che potrebbe poi risultare bloccata.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Die 4' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Point 24/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Die 4' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Point 13/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Die 4' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Point 8/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Die 4' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Point 6/ }));
+    randomSpy.mockRestore();
+    // Con i 4 dadi consumati, "Roll dice" non deve ricomparire: un secondo tap
+    // accidentale non deve poter ritirare i dadi e cancellare il turno appena giocato.
+    expect(screen.queryByRole('button', { name: 'Roll dice' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'End turn' })).toBeDefined();
+  });
+
   it('mostra il tally delle partite vinte con i nomi', () => {
     useActiveMatch.mockReturnValue({ ...baseState, data: null });
     useGameHistory.mockReturnValue({ ...baseHistory, data: { fabrizio: 3, emily: 2, draws: 0 } });

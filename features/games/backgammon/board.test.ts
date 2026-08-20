@@ -45,6 +45,18 @@ describe('initialState', () => {
   });
 });
 
+describe('rollDice', () => {
+  it('restituisce sempre due valori fra 1 e 6', () => {
+    for (let i = 0; i < 50; i++) {
+      const [a, b] = rollDice();
+      expect(a).toBeGreaterThanOrEqual(1);
+      expect(a).toBeLessThanOrEqual(6);
+      expect(b).toBeGreaterThanOrEqual(1);
+      expect(b).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
 describe('dieValuesForRoll', () => {
   it('un tiro normale dà 2 valori', () => {
     expect(dieValuesForRoll([2, 5])).toEqual([2, 5]);
@@ -259,5 +271,20 @@ describe('isLegalBearOff — regola dell\'eccedenza', () => {
     expect(isLegalSingleMove(state, 'emily', 'fabrizio', 21, 4)).toBe(true);
     // Un dado di 6 dal 21 porta a 27, eccedenza: legale solo se 19-20 sono vuoti per emily.
     expect(isLegalSingleMove(state, 'emily', 'fabrizio', 21, 6)).toBe(true);
+  });
+
+  it("la regola dell'eccedenza blocca il bear-off in crescente quando esiste una pedina più lontana", () => {
+    const state: BoardState = {
+      points: { ...emptyPoints(), 21: { owner: 'emily', count: 1 }, 23: { owner: 'emily', count: 1 } },
+      bar: { fabrizio: 0, emily: 0 },
+      borneOff: { fabrizio: 0, emily: 0 },
+    };
+    // Dal 23, un dado di 2 è l'uscita esatta (25-23=2).
+    expect(isLegalSingleMove(state, 'emily', 'fabrizio', 23, 2)).toBe(true);
+    // Un dado di 6 dal 23 sarebbe eccedenza, ma la pedina sul 21 è più lontana dalla
+    // casa (verso l'uscita): il dado va usato per lei, non per togliere quella sul 23.
+    expect(isLegalSingleMove(state, 'emily', 'fabrizio', 23, 6)).toBe(false);
+    // La pedina sul 21 stesso può invece uscire con un dado 4 (25-21=4, esatto).
+    expect(isLegalSingleMove(state, 'emily', 'fabrizio', 21, 4)).toBe(true);
   });
 });

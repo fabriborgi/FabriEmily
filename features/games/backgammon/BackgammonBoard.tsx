@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { displayName, type Person } from '@/features/auth/identity';
 import { useActiveMatch } from '../useActiveMatch';
 import { useGameHistory } from '../useGameHistory';
@@ -8,6 +8,7 @@ import { createMatch, makeMove } from '../queries';
 import { MatchStatus } from '../MatchStatus';
 import {
   initialState, rollDice, dieValuesForRoll, legalSources, applySingleMove, isWin,
+  mustEnterFromBar, barPosition,
   type BoardState,
 } from './board';
 import styles from '../games.module.css';
@@ -26,6 +27,15 @@ export function BackgammonBoard({ who }: { who: Person }) {
   // Stessa guardia sincrona degli altri giochi: il `disabled` da solo non
   // basta fra due tocchi molto ravvicinati.
   const sending = useRef(false);
+
+  // Stesso pattern di Quoridor: azzera lo stato locale del turno quando
+  // cambia la partita attiva (nuova partita o chiusura), non solo alla
+  // pressione di "Reset turn".
+  useEffect(() => {
+    setPendingDice([]);
+    setPendingState(null);
+    setSelectedDieIndex(null);
+  }, [match?.id, match?.closed_at]);
 
   async function start() {
     if (sending.current) return;
@@ -69,7 +79,7 @@ export function BackgammonBoard({ who }: { who: Person }) {
   }
 
   async function endTurn() {
-    if (sending.current || !match || !pendingState) return;
+    if (sending.current || !match || !pendingState || match.current_turn !== who) return;
     sending.current = true;
     setBusy(true);
     setError(null);
@@ -78,10 +88,13 @@ export function BackgammonBoard({ who }: { who: Person }) {
     const { error: failure } = await makeMove(match.id, who, pendingState, result, winner);
     setBusy(false);
     sending.current = false;
-    resetTurn();
     if (failure) {
+      // Un errore di rete non deve cancellare il turno già giocato: lo si
+      // lascia in sospeso così l'utente può riprovare "End turn".
       setError(failure);
       refetch();
+    } else {
+      resetTurn();
     }
   }
 
@@ -136,6 +149,22 @@ export function BackgammonBoard({ who }: { who: Person }) {
                 ))}
               </div>
             )}
+            {myTurn && pendingState !== null && mustEnterFromBar(pendingState, who) && (() => {
+              const barPoint = barPosition(who, match.started_by);
+              const barIsLegalSource =
+                selectedDieIndex !== null &&
+                legalSources(pendingState, who, match.started_by, pendingDice[selectedDieIndex]).includes(barPoint);
+              return (
+                <button
+                  type="button"
+                  className={`${styles.backgammonActionButton} ${barIsLegalSource ? styles.backgammonPointLegal : ''}`}
+                  onClick={() => barIsLegalSource && playFrom(barPoint)}
+                  disabled={!barIsLegalSource || busy}
+                >
+                  Enter from bar
+                </button>
+              );
+            })()}
             <div className={styles.backgammonBoard}>
               {[...TOP_ROW, ...BOTTOM_ROW].map((point) => {
                 const pointState = state.points[point];
@@ -161,7 +190,7 @@ export function BackgammonBoard({ who }: { who: Person }) {
             </div>
             {myTurn && (
               <div className={styles.backgammonActionsRow}>
-                {pendingDice.length === 0 && (
+                {pendingDice.length === 0 && pendingState === null && (
                   <button type="button" className={styles.backgammonActionButton} onClick={roll} disabled={busy}>
                     Roll dice
                   </button>
