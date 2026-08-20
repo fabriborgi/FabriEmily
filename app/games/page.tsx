@@ -9,6 +9,7 @@ const GAMES = [
   { slug: 'goose', label: 'Goose Game', available: true },
   { slug: 'quoridor', label: 'Quoridor', available: true },
   { slug: 'backgammon', label: 'Backgammon', available: true },
+  { slug: 'chess', label: 'Chess', available: true },
 ];
 
 export default function GamesPage() {

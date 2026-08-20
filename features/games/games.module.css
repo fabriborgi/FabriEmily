@@ -272,3 +272,37 @@
   font: var(--font-body);
 }
 .backgammonActionButton:disabled { opacity: 0.45; }
+
+.chessBoard {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  max-width: 360px;
+  margin: 0 auto var(--space-2);
+  border: 1px solid var(--line);
+}
+.chessSquare {
+  aspect-ratio: 1;
+  min-height: 40px;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chessSquareLight { background: var(--surface); color: var(--fg); }
+.chessSquareDark { background: var(--bg); color: var(--fg); }
+.chessSquareLegal { outline: 3px solid var(--accent); outline-offset: -3px; }
+.chessSquareSelected { outline: 3px solid var(--accent); outline-offset: -3px; background: var(--accent); }
+.chessSquareCheck { background: var(--danger); }
+.chessCheckBanner { text-align: center; font: var(--font-lead); color: var(--danger); margin: 0 0 var(--space-2); }
+.chessPromotionRow { display: flex; gap: var(--space-2); justify-content: center; margin: var(--space-3) 0; }
+.chessPromotionButton {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 1.6rem;
+}
