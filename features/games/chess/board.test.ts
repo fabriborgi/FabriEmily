@@ -383,3 +383,56 @@ describe('legalMoves — filtro di autoscacco', () => {
     expect(has(moves, { row: 0, col: 3 })).toBe(true); // d1, libera e non attaccata
   });
 });
+
+import { isCheckmate, isStalemate } from './board';
+
+describe('isCheckmate, isStalemate', () => {
+  it('matto del corridoio: il re è sotto scacco e non ha alcuna mossa legale', () => {
+    // Re bianco g1, pedoni bianchi f2/g2/h2 (intrappolano il proprio re), torre nera e1
+    // dà scacco lungo la prima riga (f1 libera). Nessun pezzo bianco può bloccare o
+    // catturare la torre, il re non ha caselle libere non attaccate.
+    const state = customState({
+      pieces: [
+        { square: { row: 0, col: 6 }, piece: { type: 'king', color: 'white' } }, // g1
+        { square: { row: 1, col: 5 }, piece: { type: 'pawn', color: 'white' } }, // f2
+        { square: { row: 1, col: 6 }, piece: { type: 'pawn', color: 'white' } }, // g2
+        { square: { row: 1, col: 7 }, piece: { type: 'pawn', color: 'white' } }, // h2
+        { square: { row: 0, col: 4 }, piece: { type: 'rook', color: 'black' } }, // e1
+        { square: { row: 7, col: 4 }, piece: { type: 'king', color: 'black' } },
+      ],
+    });
+    expect(isInCheck(state, 'white')).toBe(true);
+    expect(isCheckmate(state, 'white')).toBe(true);
+    expect(isStalemate(state, 'white')).toBe(false);
+  });
+
+  it('non è scacco matto se esiste una mossa legale che toglie lo scacco', () => {
+    // Stessa idea del matto del corridoio, ma senza il pedone su h2: il re può scappare in h1.
+    const state = customState({
+      pieces: [
+        { square: { row: 0, col: 6 }, piece: { type: 'king', color: 'white' } }, // g1
+        { square: { row: 1, col: 5 }, piece: { type: 'pawn', color: 'white' } }, // f2
+        { square: { row: 1, col: 6 }, piece: { type: 'pawn', color: 'white' } }, // g2
+        { square: { row: 0, col: 4 }, piece: { type: 'rook', color: 'black' } }, // e1
+        { square: { row: 7, col: 4 }, piece: { type: 'king', color: 'black' } },
+      ],
+    });
+    expect(isInCheck(state, 'white')).toBe(true);
+    expect(isCheckmate(state, 'white')).toBe(false);
+  });
+
+  it('stallo classico: il re non è sotto scacco ma non ha alcuna mossa legale', () => {
+    // Re nero a8, re bianco c7, donna bianca b6: il re nero non è in scacco (la donna
+    // non attacca a8 direttamente, distanza a "L") ma a7/b7/b8 sono tutte controllate.
+    const state = customState({
+      pieces: [
+        { square: { row: 7, col: 0 }, piece: { type: 'king', color: 'black' } }, // a8
+        { square: { row: 6, col: 2 }, piece: { type: 'king', color: 'white' } }, // c7
+        { square: { row: 5, col: 1 }, piece: { type: 'queen', color: 'white' } }, // b6
+      ],
+    });
+    expect(isInCheck(state, 'black')).toBe(false);
+    expect(isStalemate(state, 'black')).toBe(true);
+    expect(isCheckmate(state, 'black')).toBe(false);
+  });
+});

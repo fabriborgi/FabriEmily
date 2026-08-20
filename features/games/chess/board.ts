@@ -292,3 +292,21 @@ export function legalMoves(state: BoardState, from: Square): Square[] {
     return !isInCheck(next, piece.color);
   });
 }
+
+function hasAnyLegalMove(state: BoardState, color: Color): boolean {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const piece = state.board[r][c];
+      if (piece && piece.color === color && legalMoves(state, { row: r, col: c }).length > 0) return true;
+    }
+  }
+  return false;
+}
+
+export function isCheckmate(state: BoardState, color: Color): boolean {
+  return isInCheck(state, color) && !hasAnyLegalMove(state, color);
+}
+
+export function isStalemate(state: BoardState, color: Color): boolean {
+  return !isInCheck(state, color) && !hasAnyLegalMove(state, color);
+}
