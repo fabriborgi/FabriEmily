@@ -74,7 +74,12 @@ describe('ChessBoard', () => {
     render(<ChessBoard who="fabrizio" />);
     fireEvent.click(screen.getByRole('button', { name: /^e2,/ }));
     const target = screen.getByRole('button', { name: /^e4,/ }) as HTMLButtonElement;
-    expect(target.disabled).toBe(false);
+    // Ogni casella resta sempre tecnicamente tappabile (per poter cambiare selezione),
+    // quindi "non disabilitata" da sola non prova che l'anteprima sia comparsa: si
+    // verifica la classe di evidenziazione, non solo lo stato del pulsante.
+    expect(target.className).toContain('chessSquareLegal');
+    const notTarget = screen.getByRole('button', { name: /^a3,/ }) as HTMLButtonElement;
+    expect(notTarget.className).not.toContain('chessSquareLegal');
     fireEvent.click(target);
   });
 

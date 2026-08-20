@@ -250,6 +250,9 @@ describe('pseudoLegalMoves — arrocco', () => {
         { square: { row: 0, col: 4 }, piece: { type: 'king', color: 'white' } },
         { square: { row: 0, col: 0 }, piece: { type: 'rook', color: 'white' } },
         { square: { row: 7, col: 4 }, piece: { type: 'king', color: 'black' } },
+        // Torre nera su b8: attacca b1 lungo la colonna, ma non c1 né d1 — il re
+        // non passa né atterra su b1, quindi l'arrocco resta legale nonostante questo.
+        { square: { row: 7, col: 1 }, piece: { type: 'rook', color: 'black' } },
       ],
       castlingRights: {
         white: { kingside: false, queenside: true },
@@ -356,6 +359,21 @@ describe('applyMove', () => {
     const next = applyMove(state, { row: 6, col: 0 }, { row: 7, col: 0 });
     expect(next.castlingRights.black).toEqual({ kingside: true, queenside: false });
   });
+
+  it('enPassantTarget si azzera dopo qualunque mossa che non sia un doppio passo, anche un turno dopo', () => {
+    // Nero gioca d7-d5 (enPassantTarget su d6), poi Bianco gioca una mossa qualunque
+    // che non cattura subito: il bersaglio en passant scade, non resta disponibile
+    // un turno dopo.
+    const afterDoubleStep = customState({
+      pieces: [
+        { square: { row: 4, col: 3 }, piece: { type: 'pawn', color: 'black' } }, // d5
+        { square: { row: 1, col: 0 }, piece: { type: 'pawn', color: 'white' } }, // a2
+      ],
+      enPassantTarget: { row: 5, col: 3 }, // d6
+    });
+    const next = applyMove(afterDoubleStep, { row: 1, col: 0 }, { row: 2, col: 0 }); // a2-a3, mossa qualunque
+    expect(next.enPassantTarget).toBeNull();
+  });
 });
 
 describe('legalMoves — filtro di autoscacco', () => {
@@ -407,7 +425,9 @@ describe('isCheckmate, isStalemate', () => {
   });
 
   it('non è scacco matto se esiste una mossa legale che toglie lo scacco', () => {
-    // Stessa idea del matto del corridoio, ma senza il pedone su h2: il re può scappare in h1.
+    // Stessa idea del matto del corridoio, ma senza il pedone su h2: il re scappa
+    // proprio in h2 (non in h1/f1, che restano entrambe attaccate dalla torre non
+    // appena il re lascia g1, liberando la sua riga).
     const state = customState({
       pieces: [
         { square: { row: 0, col: 6 }, piece: { type: 'king', color: 'white' } }, // g1

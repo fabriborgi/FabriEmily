@@ -293,8 +293,8 @@
 .chessSquareLight { background: var(--surface); color: var(--fg); }
 .chessSquareDark { background: var(--bg); color: var(--fg); }
 .chessSquareLegal { outline: 3px solid var(--accent); outline-offset: -3px; }
-.chessSquareSelected { outline: 3px solid var(--accent); outline-offset: -3px; background: var(--accent); }
-.chessSquareCheck { background: var(--danger); }
+.chessSquareSelected { outline: 3px solid var(--accent); outline-offset: -3px; background: var(--accent); color: var(--accent-fg); }
+.chessSquareCheck { background: var(--danger); color: var(--accent-fg); }
 .chessCheckBanner { text-align: center; font: var(--font-lead); color: var(--danger); margin: 0 0 var(--space-2); }
 .chessPromotionRow { display: flex; gap: var(--space-2); justify-content: center; margin: var(--space-3) 0; }
 .chessPromotionButton {
